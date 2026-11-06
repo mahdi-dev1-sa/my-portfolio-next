@@ -1,0 +1,56 @@
+@import "tailwindcss";
+
+/* 1) الهوية الثابتة: أسود 60% + بنفسجي 30% */
+:root {
+  --background: #0a0a0c;
+  --surface: #111116;
+  --primary: #7c5cff;
+  --foreground: #f4f4f6;
+  --muted: #9a9aa6;
+
+  /* 2) اللون التمييزي 10% (الافتراضي إن لم يعمل JavaScript) */
+  --accent: #22d3ee;
+  --accent-ink: #0a0a0c; /* لون النص فوق الأزرار */
+}
+
+/* الخيارات الأربعة: السكربت يضع data-accent على <html> */
+:root[data-accent="lime"]    { --accent: #b4f06a; }
+:root[data-accent="cyan"]    { --accent: #22d3ee; }
+:root[data-accent="magenta"] { --accent: #ec4899; }
+:root[data-accent="orange"]  { --accent: #f97316; }
+
+/* ربط المتغيرات بأسماء ألوان Tailwind: bg-accent, text-accent, border-primary ... */
+@theme inline {
+  --color-background: var(--background);
+  --color-surface: var(--surface);
+  --color-primary: var(--primary);
+  --color-foreground: var(--foreground);
+  --color-muted: var(--muted);
+  --color-accent: var(--accent);
+  --color-accent-ink: var(--accent-ink);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+}
+
+/* وهج اللون التمييزي (للأزرار) */
+@utility glow-accent {
+  box-shadow: 0 0 24px color-mix(in srgb, var(--accent) 45%, transparent);
+}
+
+/* وهج بنفسجي خلفي (Ambient Glow) */
+@utility ambient-purple {
+  background:
+    radial-gradient(60% 50% at 70% 0%, color-mix(in srgb, var(--primary) 35%, transparent), transparent 70%),
+    var(--background);
+}
+
+/* نص متدرج من الأبيض إلى اللون التمييزي */
+@utility text-gradient-accent {
+  background-image: linear-gradient(90deg, #fff 0%, var(--accent) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
