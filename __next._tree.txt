@@ -1,3 +1,3 @@
-:HL["/my-portfolio-next/_next/static/chunks/1er6jlnliorw3.css","style"]
+:HL["/my-portfolio-next/_next/static/chunks/26zba6p5tbis8.css","style"]
 1:[["children",{"s":"__PAGE__","h":160}]]
-0:{"b":"d_zyaBhkeJ23SZgfXPu8R","t":{"t":{"s":"","h":80,"c":"$Q1"}}}
+0:{"b":"YU5GvGTTWzTf9vnkzoVwl","t":{"t":{"s":"","h":80,"c":"$Q1"}}}
