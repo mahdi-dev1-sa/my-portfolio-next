@@ -1,25 +1,42 @@
 @import "tailwindcss";
 
-/* 1) الهوية الثابتة: أسود 60% + بنفسجي 30% */
+/* ---------- Brand: black 60% + purple 30% (dark is the default mode) ---------- */
 :root {
+  color-scheme: dark;
   --background: #0a0a0c;
   --surface: #111116;
   --primary: #7c5cff;
   --foreground: #f4f4f6;
   --muted: #9a9aa6;
 
-  /* 2) اللون التمييزي 10% (الافتراضي إن لم يعمل JavaScript) */
+  /* ---------- Random accent 10% (default if JavaScript is off) ---------- */
   --accent: #22d3ee;
-  --accent-ink: #0a0a0c; /* لون النص فوق الأزرار */
+  --accent-ink: #0a0a0c; /* text color on top of accent buttons */
+  --accent-fg: var(--accent); /* accent used as TEXT color */
 }
 
-/* الخيارات الأربعة: السكربت يضع data-accent على <html> */
+/* Light mode: warm off-white, same purple identity */
+:root[data-theme="light"] {
+  color-scheme: light;
+  --background: #f3f1ed;
+  --surface: #ffffff;
+  --foreground: #0a0a0c;
+  --muted: #6a6a75;
+}
+
+/* The four accents: the script sets data-accent on <html> */
 :root[data-accent="lime"]    { --accent: #b4f06a; }
 :root[data-accent="cyan"]    { --accent: #22d3ee; }
 :root[data-accent="magenta"] { --accent: #ec4899; }
 :root[data-accent="orange"]  { --accent: #f97316; }
 
-/* ربط المتغيرات بأسماء ألوان Tailwind: bg-accent, text-accent, border-primary ... */
+/* In light mode, bright accents are too pale as text, so use deeper shades for text only */
+:root[data-theme="light"][data-accent="lime"]    { --accent-fg: #4d7c0f; }
+:root[data-theme="light"][data-accent="cyan"]    { --accent-fg: #0e7490; }
+:root[data-theme="light"][data-accent="magenta"] { --accent-fg: #be185d; }
+:root[data-theme="light"][data-accent="orange"]  { --accent-fg: #c2410c; }
+
+/* Map variables to Tailwind color names: bg-accent, text-accent-fg, border-primary ... */
 @theme inline {
   --color-background: var(--background);
   --color-surface: var(--surface);
@@ -27,6 +44,7 @@
   --color-foreground: var(--foreground);
   --color-muted: var(--muted);
   --color-accent: var(--accent);
+  --color-accent-fg: var(--accent-fg);
   --color-accent-ink: var(--accent-ink);
 }
 
@@ -35,22 +53,46 @@ body {
   color: var(--foreground);
 }
 
-/* وهج اللون التمييزي (للأزرار) */
+/* Smooth color change only while the theme is being toggled */
+.theme-anim,
+.theme-anim * {
+  transition:
+    background-color 500ms ease,
+    color 500ms ease,
+    border-color 500ms ease !important;
+}
+
+/* Accent glow (for buttons) */
 @utility glow-accent {
   box-shadow: 0 0 24px color-mix(in srgb, var(--accent) 45%, transparent);
 }
 
-/* وهج بنفسجي خلفي (Ambient Glow) */
+/* Purple ambient glow: gradient only, so the page color still comes from the background */
 @utility ambient-purple {
-  background:
-    radial-gradient(60% 50% at 70% 0%, color-mix(in srgb, var(--primary) 35%, transparent), transparent 70%),
-    var(--background);
+  background-image: radial-gradient(
+    60% 50% at 70% 0%,
+    color-mix(in srgb, var(--primary) 35%, transparent),
+    transparent 70%
+  );
 }
 
-/* نص متدرج من الأبيض إلى اللون التمييزي */
+/* Text gradient from the foreground color to the accent */
 @utility text-gradient-accent {
-  background-image: linear-gradient(90deg, #fff 0%, var(--accent) 100%);
+  background-image: linear-gradient(90deg, var(--foreground) 0%, var(--accent-fg) 100%);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
+}
+
+/* Gentle idle swing for the pull cord */
+@keyframes cord-swing {
+  0%, 100% { transform: rotate(-2.5deg); }
+  50%      { transform: rotate(2.5deg); }
+}
+.cord-swing {
+  transform-origin: top center;
+  animation: cord-swing 4.5s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .cord-swing { animation: none; }
 }
