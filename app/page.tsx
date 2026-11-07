@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
+import LocalTime from "./components/LocalTime";
 
 const words = ["UI/UX Designer", "Web Developer", "App Developer", "Game Developer"];
 
@@ -13,11 +14,15 @@ export default function Home() {
   return (
     <main className="ambient-purple min-h-screen px-6 py-20">
       <div className="mx-auto max-w-5xl">
-        {/* availability badge: accent indicator */}
-        <p className="mb-6 inline-flex items-center gap-2 text-sm text-muted">
-          <span className="size-2 animate-pulse rounded-full bg-accent" />
-          Available for work
-        </p>
+        {/* top row: availability badge + local time (right margin keeps clear of the cord) */}
+        <div className="mb-6 flex items-center justify-between gap-3 pr-12 sm:pr-16">
+          <p className="inline-flex items-center gap-2 whitespace-nowrap text-sm text-muted">
+            <span className="size-2 animate-pulse rounded-full bg-accent" />
+            <span className="sm:hidden">Available</span>
+            <span className="hidden sm:inline">Available for work</span>
+          </p>
+          <LocalTime />
+        </div>
 
         {/* header: animated text */}
         <h1 className="text-5xl font-bold md:text-7xl">
