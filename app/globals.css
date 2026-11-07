@@ -84,15 +84,15 @@ body {
   color: transparent;
 }
 
-/* Gentle idle swing for the pull cord */
-@keyframes cord-swing {
-  0%, 100% { transform: rotate(-2.5deg); }
-  50%      { transform: rotate(2.5deg); }
+/* Circle-reveal when the theme flips (View Transitions API) */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
 }
-.cord-swing {
-  transform-origin: top center;
-  animation: cord-swing 4.5s ease-in-out infinite;
-}
-@media (prefers-reduced-motion: reduce) {
-  .cord-swing { animation: none; }
-}
+::view-transition-old(root) { z-index: 1; }
+::view-transition-new(root) { z-index: 2; }
+/* keep the cord live and on top while the page changes color */
+::view-transition-group(theme-cord) { animation: none; }
+::view-transition-old(theme-cord) { display: none; }
+::view-transition-new(theme-cord) { animation: none; }
