@@ -1,12 +1,22 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import Preloader from "./components/Preloader";
+import ThemeCord from "./components/ThemeCord";
 
 export const metadata: Metadata = { title: "My Portfolio" };
 
 // Runs before the first paint, so there is no color flash.
 // The random choice is saved for the whole browsing session.
 const themeScript = `(function(){
+  var root = document.documentElement;
+  // 1) light / dark mode (saved on this device, dark by default)
+  var mode = 'dark';
+  try {
+    var saved = localStorage.getItem('theme');
+    if (saved === 'light' || saved === 'dark') mode = saved;
+  } catch (e) {}
+  root.setAttribute('data-theme', mode);
+  // 2) random accent color (saved for this browsing session)
   var themes = ['lime','cyan','magenta','orange'];
   var key = 'accent-theme';
   var t;
@@ -19,7 +29,7 @@ const themeScript = `(function(){
   } catch (e) {
     t = t && themes.indexOf(t) > -1 ? t : 'cyan';
   }
-  document.documentElement.setAttribute('data-accent', t);
+  root.setAttribute('data-accent', t);
 })();`;
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
@@ -35,6 +45,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body>
         <Preloader />
+        <ThemeCord />
         {children}
       </body>
     </html>
