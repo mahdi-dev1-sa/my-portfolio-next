@@ -12,10 +12,10 @@ export default function Home() {
   }, []);
 
   return (
-    <main className="ambient-purple min-h-screen px-6 py-20">
+    <main className="ambient-purple min-h-screen px-6 pb-20 pt-7">
       <div className="mx-auto max-w-5xl">
         {/* top row: availability badge + local time (right margin keeps clear of the cord) */}
-        <div className="mb-6 flex items-center justify-between gap-3 pr-12 sm:pr-16">
+        <div className="mb-16 flex items-center justify-between gap-3 pr-12 sm:mb-20 sm:pr-16">
           <p className="inline-flex items-center gap-2 whitespace-nowrap text-sm text-muted">
             <span className="size-2 animate-pulse rounded-full bg-accent" />
             <span className="sm:hidden">Available</span>
