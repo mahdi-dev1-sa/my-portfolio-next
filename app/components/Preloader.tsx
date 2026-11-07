@@ -58,7 +58,7 @@ export default function Preloader() {
   return (
     <div
       aria-hidden="true"
-      className={`preloader ambient-purple fixed inset-0 z-50 flex flex-col justify-between px-6 py-8 transition-transform duration-[800ms] ease-[cubic-bezier(.76,0,.24,1)] ${
+      className={`preloader ambient-purple bg-background fixed inset-0 z-50 flex flex-col justify-between px-6 py-8 transition-transform duration-[800ms] ease-[cubic-bezier(.76,0,.24,1)] ${
         exiting ? "-translate-y-full delay-[650ms]" : ""
       }`}
     >
@@ -106,7 +106,7 @@ export default function Preloader() {
           <span className="text-7xl font-bold tabular-nums leading-none">
             {String(count).padStart(3, "0")}
           </span>
-          <span className="mb-2 h-px w-32 bg-white/15">
+          <span className="mb-2 h-px w-32 bg-foreground/15">
             <span
               className="block h-px bg-accent"
               style={{ width: `${count}%` }}
