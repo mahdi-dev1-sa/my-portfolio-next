@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import LocalTime from "./components/LocalTime";
 import Nav from "./components/Nav";
+import SteamTrain from "./components/SteamTrain";
 
 const words = ["UI/UX Designer", "Web Developer", "App Developer", "Game Developer"];
 
@@ -13,7 +14,7 @@ export default function Home() {
   }, []);
 
   return (
-    <main id="home" className="ambient-purple relative min-h-screen px-6 pb-20 pt-7">
+    <main id="home" className="ambient-purple relative min-h-screen overflow-x-clip px-6 pb-20 pt-7">
       {/* local time: pinned near the right edge of the page, clear of the cord */}
       <div className="absolute right-[3.75rem] top-7 sm:right-24">
         <LocalTime />
@@ -39,6 +40,11 @@ export default function Home() {
           <span className="text-muted">I am a </span>
           <span key={i} className="text-gradient-accent">{words[i]}</span>
         </h1>
+
+        {/* skills steam train: full-bleed, right under the name */}
+        <div className="relative left-1/2 mt-8 w-screen -translate-x-1/2">
+          <SteamTrain />
+        </div>
 
         {/* call-to-action buttons */}
         <div className="mt-10 flex gap-4">
