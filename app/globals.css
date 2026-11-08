@@ -36,9 +36,9 @@
 :root[data-theme="light"][data-accent="magenta"] { --accent-fg: #be185d; }
 :root[data-theme="light"][data-accent="orange"]  { --accent-fg: #c2410c; }
 
-/* Custom breakpoint: the nav switches from a menu button to inline links at 768px */
+/* Custom breakpoint: the nav switches from a menu button to inline links at 1088px (all links fit in one row) */
 @theme {
-  --breakpoint-nav: 48rem;
+  --breakpoint-nav: 68rem;
 }
 
 /* Map variables to Tailwind color names: bg-accent, text-accent-fg, border-primary ... */
