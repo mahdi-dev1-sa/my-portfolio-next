@@ -21,7 +21,7 @@ export default function Home() {
 
       <div className="mx-auto max-w-5xl">
         {/* top bar: navigation (the local time chip sits at the far right) */}
-        <div className="mb-8 flex min-h-[34px] items-center sm:mb-10">
+        <div className="mb-8 flex min-h-[34px] items-center nav:mt-14 sm:mb-10">
           <Nav />
         </div>
 
