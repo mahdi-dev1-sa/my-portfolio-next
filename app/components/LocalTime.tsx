@@ -42,8 +42,8 @@ export default function LocalTime() {
       <span className="font-semibold tabular-nums">{time}</span>
       {date && (
         <>
-          <span aria-hidden="true" className="hidden size-1 rounded-full bg-muted sm:block nav:max-xl:hidden" />
-          <span className="hidden text-muted sm:inline nav:max-xl:hidden">{date}</span>
+          <span aria-hidden="true" className="hidden size-1 rounded-full bg-muted sm:block" />
+          <span className="hidden text-muted sm:inline">{date}</span>
         </>
       )}
     </div>
