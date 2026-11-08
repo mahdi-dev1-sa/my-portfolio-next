@@ -21,16 +21,12 @@ const linkBase = "transition-colors hover:text-accent-fg";
 
 export default function Nav() {
   const [menuOpen, setMenuOpen] = useState(false); // small screens: the whole menu
-  const [svcOpen, setSvcOpen] = useState(false); // wide screens: the Services dropdown
   const ref = useRef<HTMLElement>(null);
 
   // close with Escape, or by clicking anywhere outside the nav
   useEffect(() => {
-    if (!menuOpen && !svcOpen) return;
-    const close = () => {
-      setMenuOpen(false);
-      setSvcOpen(false);
-    };
+    if (!menuOpen) return;
+    const close = () => setMenuOpen(false);
     const onKey = (e: KeyboardEvent) => e.key === "Escape" && close();
     const onDown = (e: PointerEvent) => {
       if (ref.current && !ref.current.contains(e.target as Node)) close();
@@ -41,67 +37,18 @@ export default function Nav() {
       window.removeEventListener("keydown", onKey);
       window.removeEventListener("pointerdown", onDown);
     };
-  }, [menuOpen, svcOpen]);
+  }, [menuOpen]);
 
   return (
     <nav ref={ref} aria-label="Main" className="relative z-30">
-      {/* ---------- wide screens: links in a row, services in a dropdown ---------- */}
-      <ul className="hidden items-center gap-7 text-sm nav:flex">
+      {/* ---------- wide screens: every link in one row ---------- */}
+      <ul className="hidden flex-wrap items-center gap-x-3.5 gap-y-2 text-[13px] nav:flex">
         <li>
           <a href={HOME.href} className={`text-foreground ${linkBase}`}>
             {HOME.label}
           </a>
         </li>
-
-        <li
-          className="relative"
-          onMouseEnter={() => setSvcOpen(true)}
-          onMouseLeave={() => setSvcOpen(false)}
-        >
-          <button
-            type="button"
-            aria-expanded={svcOpen}
-            aria-controls="services-menu"
-            onClick={() => setSvcOpen((v) => !v)}
-            className={`inline-flex items-center gap-1.5 text-muted ${linkBase}`}
-          >
-            Services
-            <svg
-              width="10"
-              height="10"
-              viewBox="0 0 12 12"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1.6"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              aria-hidden="true"
-              className={`transition-transform ${svcOpen ? "rotate-180" : ""}`}
-            >
-              <path d="M2 4l4 4 4-4" />
-            </svg>
-          </button>
-
-          {svcOpen && (
-            <div id="services-menu" className="absolute left-0 top-full z-30 pt-3">
-              <ul className="w-64 rounded-2xl border border-foreground/15 bg-surface/95 p-2 shadow-xl backdrop-blur">
-                {SERVICES.map((l) => (
-                  <li key={l.label}>
-                    <a
-                      href={l.href}
-                      onClick={() => setSvcOpen(false)}
-                      className="block rounded-xl px-3 py-2 text-muted transition-colors hover:bg-foreground/5 hover:text-accent-fg"
-                    >
-                      {l.label}
-                    </a>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
-        </li>
-
-        {MORE.map((l) => (
+        {[...SERVICES, ...MORE].map((l) => (
           <li key={l.label}>
             <a href={l.href} className={`text-muted ${linkBase}`}>
               {l.label}
