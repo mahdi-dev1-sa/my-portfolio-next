@@ -1,5 +1,4 @@
 "use client";
-import { useEffect, useState } from "react";
 import LocalTime from "./components/LocalTime";
 import dynamic from "next/dynamic";
 import Nav from "./components/Nav";
@@ -9,15 +8,7 @@ import SteamTrain from "./components/SteamTrain";
 // three.js is big, so load it in the browser only (never on the server)
 const ParticleField = dynamic(() => import("./components/ParticleField"), { ssr: false });
 
-const words = ["UI/UX Designer", "Web Developer", "App Developer", "Game Developer"];
-
 export default function Home() {
-  const [i, setI] = useState(0);
-  useEffect(() => {
-    const id = setInterval(() => setI((n) => (n + 1) % words.length), 2200);
-    return () => clearInterval(id);
-  }, []);
-
   return (
     <main id="home" className="ambient-purple relative min-h-screen overflow-x-clip px-6 pb-20 pt-7">
       <ParticleField />
@@ -40,15 +31,18 @@ export default function Home() {
           <span className="hidden sm:inline">Available for work</span>
         </p>
 
-        {/* header: animated text */}
-        <h1 className="text-5xl font-bold md:text-7xl">
-          Hi, I&apos;m Mahdi.
-          <br />
-          <span className="text-muted">I am a </span>
-          <span key={i} className="text-gradient-accent">{words[i]}</span>
-        </h1>
+        {/* header */}
+        <h1 className="text-5xl font-bold md:text-7xl">Hi, I&apos;m Mahdi.</h1>
 
-        {/* skills steam train: full-bleed, right under the name */}
+        {/* short bio */}
+        <p className="mt-5 max-w-2xl text-base leading-relaxed text-muted md:text-lg">
+          I&apos;m a UI/UX designer and developer who builds apps, games and web experiences people
+          enjoy using. I work across web, iOS, video editing, graphic design and AI, so an idea can go
+          from a sketch to something you can tap, play or watch. I care about clean interfaces, smooth
+          motion and details that feel considered.
+        </p>
+
+        {/* skills steam train: full-bleed, right under the bio */}
         <div className="relative left-1/2 mt-8 w-screen -translate-x-1/2">
           <SteamTrain />
         </div>
