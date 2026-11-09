@@ -1,5 +1,5 @@
 "use client";
-import { useRef } from "react";
+import { useEffect, useRef } from "react";
 
 // The ids match the nav links (#web-development ...), so clicking a nav link scrolls to its card.
 const SERVICES = [
@@ -12,10 +12,22 @@ const SERVICES = [
   { id: "graphic-design", title: "Graphic Design", text: "Logos, posters and social media visuals." },
 ];
 
+// Each card lives at its own depth, so they move at different speeds and angles (parallax in 3D).
+//   s: scroll speed   z: depth (px)   rx/ry/rz: resting rotation (deg)
+const MOTION = [
+  { s: 1.0, z: 40, rx: 8, ry: -14, rz: -2 },
+  { s: 0.6, z: -20, rx: -6, ry: 10, rz: 1.5 },
+  { s: 1.3, z: 70, rx: 6, ry: 12, rz: 2 },
+  { s: 0.8, z: 0, rx: -8, ry: -10, rz: -1.5 },
+  { s: 0.7, z: 20, rx: 6, ry: 14, rz: 1 },
+  { s: 1.2, z: -30, rx: -6, ry: -12, rz: 2 },
+  { s: 0.9, z: 50, rx: 4, ry: 6, rz: -1 },
+];
+
 function GlassCard({ index, id, title, text }: { index: number; id: string; title: string; text: string }) {
   const card = useRef<HTMLElement>(null);
 
-  // tilt toward the pointer and move the light spot (no React state: only CSS variables change)
+  // hover: tilt toward the pointer and move the light spot (only CSS variables change)
   const onMove = (e: React.PointerEvent) => {
     const el = card.current;
     if (!el) return;
@@ -35,10 +47,14 @@ function GlassCard({ index, id, title, text }: { index: number; id: string; titl
   };
 
   return (
-    // outer box floats up and down, inner card tilts: two transforms on two elements
+    // OUTER box: flies through 3D space (transform set by the scroll loop) and flies in when first seen.
+    // INNER card: tilts on hover. Each layer owns a different CSS property, so they never fight.
     <div
-      className={`motion-safe:animate-float ${index === SERVICES.length - 1 ? "sm:col-span-2" : ""}`}
-      style={{ animationDelay: `${index * -0.9}s` }}
+      data-fly
+      className={`opacity-0 [scale:0.8] [translate:0_90px] transition-[opacity,translate,scale] duration-[900ms] ease-[cubic-bezier(.2,.8,.2,1)] data-[in=1]:opacity-100 data-[in=1]:[scale:1] data-[in=1]:[translate:0_0] motion-reduce:transition-none ${
+        index === SERVICES.length - 1 ? "sm:col-span-2" : ""
+      }`}
+      style={{ transitionDelay: `${(index % 4) * 90}ms`, willChange: "transform" }}
     >
       <article
         ref={card}
@@ -78,13 +94,96 @@ function GlassCard({ index, id, title, text }: { index: number; id: string; titl
 }
 
 export default function ServiceCards() {
+  const section = useRef<HTMLElement>(null);
+  const grid = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const sec = section.current;
+    const box = grid.current;
+    if (!sec || !box) return;
+    const cards = Array.from(box.querySelectorAll<HTMLElement>("[data-fly]"));
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    // cards fly in (from far away, small and faded) when they first appear on screen
+    const seen = new IntersectionObserver(
+      (entries) => {
+        for (const e of entries) {
+          if (e.isIntersecting) {
+            (e.target as HTMLElement).dataset.in = "1";
+            seen.unobserve(e.target);
+          }
+        }
+      },
+      { threshold: 0.15 }
+    );
+    cards.forEach((c) => seen.observe(c));
+    if (reduce) {
+      cards.forEach((c) => (c.dataset.in = "1"));
+      return () => seen.disconnect();
+    }
+
+    // pointer position (-1..1), smoothed so the cards glide instead of jumping
+    const mouse = { x: 0, y: 0, sx: 0, sy: 0 };
+    const onMove = (e: PointerEvent) => {
+      mouse.x = (e.clientX / window.innerWidth - 0.5) * 2;
+      mouse.y = (e.clientY / window.innerHeight - 0.5) * 2;
+    };
+    window.addEventListener("pointermove", onMove, { passive: true });
+
+    // run the loop only while the section is on screen
+    let raf = 0;
+    let visible = false;
+    const t0 = performance.now();
+    const frame = (now: number) => {
+      raf = requestAnimationFrame(frame);
+      const t = (now - t0) / 1000;
+      mouse.sx += (mouse.x - mouse.sx) * 0.06;
+      mouse.sy += (mouse.y - mouse.sy) * 0.06;
+
+      const r = sec.getBoundingClientRect();
+      const vh = window.innerHeight;
+      // p: -1 when the section is below the screen, 0 when centered, +1 when above
+      const p = Math.max(-1.2, Math.min(1.2, (r.top + r.height / 2 - vh / 2) / vh));
+      const small = window.innerWidth < 768;
+      const k = small ? 0.5 : 1; // calmer on phones
+
+      cards.forEach((el, i) => {
+        const m = MOTION[i];
+        const y = p * m.s * 70 * k + Math.sin(t * 0.9 + i * 1.3) * 9 * k;
+        const x = mouse.sx * m.z * 0.35 * k + Math.cos(t * 0.6 + i) * 5 * k;
+        const z = m.z * k - Math.abs(p) * 80 * k;
+        const rx = (m.rx + p * 16 - mouse.sy * 5) * k;
+        const ry = (m.ry - p * 20 + mouse.sx * 7) * k;
+        const rz = (m.rz + Math.sin(t * 0.5 + i) * 1.4) * k;
+        el.style.transform = `perspective(1100px) translate3d(${x.toFixed(1)}px, ${y.toFixed(1)}px, ${z.toFixed(1)}px) rotateX(${rx.toFixed(2)}deg) rotateY(${ry.toFixed(2)}deg) rotateZ(${rz.toFixed(2)}deg)`;
+      });
+    };
+    const watch = new IntersectionObserver(
+      ([entry]) => {
+        const now = entry.isIntersecting;
+        if (now && !visible) raf = requestAnimationFrame(frame);
+        if (!now) cancelAnimationFrame(raf);
+        visible = now;
+      },
+      { rootMargin: "200px" }
+    );
+    watch.observe(sec);
+
+    return () => {
+      cancelAnimationFrame(raf);
+      watch.disconnect();
+      seen.disconnect();
+      window.removeEventListener("pointermove", onMove);
+    };
+  }, []);
+
   return (
-    <section aria-labelledby="specializations" className="mt-24">
+    <section ref={section} aria-labelledby="specializations" className="mt-24">
       <p className="text-xs font-semibold uppercase tracking-widest text-accent-fg">What I do</p>
       <h2 id="specializations" className="mt-3 text-3xl font-bold md:text-4xl">
         My specializations
       </h2>
-      <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+      <div ref={grid} className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
         {SERVICES.map((s, i) => (
           <GlassCard key={s.id} index={i} {...s} />
         ))}
