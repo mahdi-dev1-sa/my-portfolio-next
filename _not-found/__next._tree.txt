@@ -1,4 +1,4 @@
-:HL["/my-portfolio-next/_next/static/chunks/1b8_8az20ai0z.css","style"]
+:HL["/my-portfolio-next/_next/static/chunks/193l57fu1flm4.css","style"]
 2:[["children",{"s":"__PAGE__","h":160}]]
 1:[["children",{"s":"/_not-found","h":96,"c":"$Q2"}]]
-0:{"b":"JNZh4HXLPV4NRWSG7gJsl","t":{"t":{"s":"","h":80,"c":"$Q1"}}}
+0:{"b":"6QXHwR3iw8wPgBO7f4juF","t":{"t":{"s":"","h":80,"c":"$Q1"}}}
