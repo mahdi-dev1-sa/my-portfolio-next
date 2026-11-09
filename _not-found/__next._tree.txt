@@ -1,4 +1,4 @@
 :HL["/my-portfolio-next/_next/static/chunks/089o0l3_5ntkt.css","style"]
 2:[["children",{"s":"__PAGE__","h":160}]]
 1:[["children",{"s":"/_not-found","h":96,"c":"$Q2"}]]
-0:{"b":"Z6l1hiztEA6d1WdQEM6e6","t":{"t":{"s":"","h":80,"c":"$Q1"}}}
+0:{"b":"3At8gbwQgQblDeaY5IUA7","t":{"t":{"s":"","h":80,"c":"$Q1"}}}
