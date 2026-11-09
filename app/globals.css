@@ -39,6 +39,13 @@
 /* Custom breakpoint: the nav switches from a menu button to inline links at 1088px (all links fit in one row) */
 @theme {
   --breakpoint-nav: 68rem;
+
+  /* slow up-and-down float for the glass cards */
+  --animate-float: float 7s ease-in-out infinite;
+  @keyframes float {
+    0%, 100% { translate: 0 0; }
+    50% { translate: 0 -10px; }
+  }
 }
 
 /* Map variables to Tailwind color names: bg-accent, text-accent-fg, border-primary ... */
@@ -51,6 +58,11 @@
   --color-accent: var(--accent);
   --color-accent-fg: var(--accent-fg);
   --color-accent-ink: var(--accent-ink);
+}
+
+/* smooth scrolling when a nav link jumps to a card */
+@media (prefers-reduced-motion: no-preference) {
+  html { scroll-behavior: smooth; }
 }
 
 body {
