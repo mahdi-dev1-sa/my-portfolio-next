@@ -7,5 +7,6 @@ Portfolio built with Next.js and Tailwind CSS.
 - Pull cord (top right) with rope physics toggles light and dark mode, with a circle reveal
 - Local time chip (owner's time zone) at the top right
 - Navigation bar (links are placeholders for now; menu button on small screens)
+- 3D particle background (three.js) and glass cards for my specializations that fly and tilt with scroll and mouse
 
 Live: https://mahdi-dev1-sa.github.io/my-portfolio-next/
