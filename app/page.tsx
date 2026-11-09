@@ -1,8 +1,13 @@
 "use client";
 import { useEffect, useState } from "react";
 import LocalTime from "./components/LocalTime";
+import dynamic from "next/dynamic";
 import Nav from "./components/Nav";
+import ServiceCards from "./components/ServiceCards";
 import SteamTrain from "./components/SteamTrain";
+
+// three.js is big, so load it in the browser only (never on the server)
+const ParticleField = dynamic(() => import("./components/ParticleField"), { ssr: false });
 
 const words = ["UI/UX Designer", "Web Developer", "App Developer", "Game Developer"];
 
@@ -15,12 +20,14 @@ export default function Home() {
 
   return (
     <main id="home" className="ambient-purple relative min-h-screen overflow-x-clip px-6 pb-20 pt-7">
+      <ParticleField />
+
       {/* local time: pinned near the right edge of the page, clear of the cord */}
-      <div className="absolute right-[3.75rem] top-7 sm:right-24">
+      <div className="absolute right-[3.75rem] top-7 z-10 sm:right-24">
         <LocalTime />
       </div>
 
-      <div className="mx-auto max-w-5xl">
+      <div className="relative z-10 mx-auto max-w-5xl">
         {/* top bar: navigation (the local time chip sits at the far right) */}
         <div className="mb-8 flex min-h-[34px] items-center nav:mt-14 sm:mb-10">
           <Nav />
@@ -56,8 +63,11 @@ export default function Home() {
           </button>
         </div>
 
-        {/* cards */}
-        <section className="mt-20 grid gap-6 md:grid-cols-3">
+        {/* glass cards: my specializations */}
+        <ServiceCards />
+
+        {/* project cards */}
+        <section className="mt-24 grid gap-6 md:grid-cols-3">
           {["Expense Tracker", "Brick Breaker", "Dice"].map((name) => (
             <article
               key={name}
