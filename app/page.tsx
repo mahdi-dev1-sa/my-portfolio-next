@@ -1,9 +1,13 @@
 "use client";
 import LocalTime from "./components/LocalTime";
 import dynamic from "next/dynamic";
+import { Kaushan_Script } from "next/font/google";
 import Nav from "./components/Nav";
 import ServiceCards from "./components/ServiceCards";
 import SteamTrain from "./components/SteamTrain";
+
+// brush-script font for the name
+const brush = Kaushan_Script({ weight: "400", subsets: ["latin"], display: "swap" });
 
 // three.js is big, so load it in the browser only (never on the server)
 const ParticleField = dynamic(() => import("./components/ParticleField"), { ssr: false });
@@ -32,7 +36,9 @@ export default function Home() {
         </p>
 
         {/* header */}
-        <h1 className="text-5xl font-bold md:text-7xl">Hi, I&apos;m Mahdi.</h1>
+        <h1 className={`${brush.className} text-6xl font-normal leading-tight md:text-8xl`}>
+          Hi, I&apos;m Mahdi.
+        </h1>
 
         {/* short bio */}
         <p className="mt-5 max-w-2xl text-base leading-relaxed text-muted md:text-lg">
