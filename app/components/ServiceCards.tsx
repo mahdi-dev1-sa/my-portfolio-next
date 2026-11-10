@@ -3,8 +3,8 @@ import { useEffect, useRef, useState } from "react";
 import { SERVICES } from "../services";
 
 // "Magic happens behind the doors": a hallway with one arched door per specialization.
-// Hover a door to peek inside (it opens a little, inward). Click it to enter:
-// the door stands on the left and what I do shows right beside it.
+// Put the mouse on a door: it opens a little, inward, and what I do shows right beside it.
+// Click a door to go out to my projects. (On a phone: tap once to look, tap again to go.)
 const COLORS = ["#1f4fd8", "#6d4bd6", "#8fa9c4", "#d0605a", "#1f9d8f", "#d99a2b", "#c2559a"];
 
 // The picture of one door. It fills the width of whatever holds it.
@@ -74,17 +74,52 @@ function DoorArt({ index, title, open }: { index: number; title: string; open: b
   );
 }
 
-const ctrl =
-  "rounded-full border border-foreground/15 px-4 py-1.5 font-mono text-[11px] uppercase tracking-widest text-muted transition hover:border-accent hover:text-accent-fg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent";
+type Service = (typeof SERVICES)[number];
+
+function goToProjects() {
+  document.getElementById("projects")?.scrollIntoView({ block: "start" });
+}
+
+// what I do with one specialization
+function Info({ s }: { s: Service }) {
+  return (
+    <div>
+      <h3 className="text-2xl font-semibold leading-tight tracking-tight sm:text-3xl">{s.title.replace(" (AI)", "")}</h3>
+      <p className="mt-2 font-mono text-[11px] font-bold uppercase tracking-[0.14em] text-accent-fg">{s.tagline}</p>
+      <ul className="mt-4 grid gap-2.5">
+        {s.points.map((p) => (
+          <li key={p} className="flex items-center gap-3 text-sm font-medium sm:text-base">
+            <span
+              aria-hidden="true"
+              className="grid size-5 shrink-0 place-items-center rounded-full bg-foreground text-[11px] text-background"
+            >
+              ✓
+            </span>
+            {p}
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
 
 export default function ServiceCards() {
   const box = useRef<HTMLDivElement>(null);
-  const [view, setView] = useState<number | null>(null); // the door we walked into
-  const [hover, setHover] = useState<number | null>(null); // the door we are peeking into
-  const n = SERVICES.length;
-  const current = view === null ? null : SERVICES[view];
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [active, setActive] = useState<number | null>(null);
+  const current = active === null ? null : SERVICES[active];
 
-  // doors rise in the first time they appear on screen (and again when we walk back out)
+  const enter = (i: number) => {
+    if (timer.current) clearTimeout(timer.current);
+    setActive(i);
+  };
+  // a short pause, so the words do not blink when the mouse crosses the gap between two doors
+  const leave = () => {
+    if (timer.current) clearTimeout(timer.current);
+    timer.current = setTimeout(() => setActive(null), 140);
+  };
+
+  // doors rise in the first time they appear on screen
   useEffect(() => {
     const el = box.current;
     if (!el) return;
@@ -102,17 +137,30 @@ export default function ServiceCards() {
     );
     doors.forEach((d) => seen.observe(d));
     return () => seen.disconnect();
-  }, [view]);
+  }, []);
 
-  // nav links (#web-development ...) walk into that door
+  // nav links (#web-development ...) open that door
   useEffect(() => {
     const go = () => {
       const i = SERVICES.findIndex((s) => s.id === window.location.hash.slice(1));
-      if (i >= 0) setView(i);
+      if (i >= 0) setActive(i);
     };
     window.addEventListener("hashchange", go);
-    return () => window.removeEventListener("hashchange", go);
+    return () => {
+      window.removeEventListener("hashchange", go);
+      if (timer.current) clearTimeout(timer.current);
+    };
   }, []);
+
+  // on a phone, tapping anywhere else closes the open door
+  useEffect(() => {
+    if (active === null) return;
+    const away = (e: PointerEvent) => {
+      if (!box.current?.contains(e.target as Node)) setActive(null);
+    };
+    document.addEventListener("pointerdown", away);
+    return () => document.removeEventListener("pointerdown", away);
+  }, [active]);
 
   return (
     <section aria-labelledby="specializations" className="mt-24">
@@ -124,89 +172,73 @@ export default function ServiceCards() {
         Magic happens behind the doors
       </h2>
 
-      {/* the hallway: a fixed-height stage, so nothing jumps when we walk in or out */}
-      <div className="relative mt-12 flex min-h-[32rem] items-end border-b border-foreground/20 pb-0">
+      {/* the hallway: the doors never move, only the words appear */}
+      <div className="relative mt-12 flex min-h-[22rem] items-end border-b border-foreground/20">
         {SERVICES.map((s) => (
           <span key={s.id} id={s.id} aria-hidden="true" className="absolute left-0 top-0 scroll-mt-24" />
         ))}
 
-        {current === null ? (
-          <div
-            ref={box}
-            className="flex w-full snap-x gap-4 overflow-x-auto px-2 pb-0 pt-4 sm:justify-between sm:gap-4 sm:overflow-visible"
-          >
-            {SERVICES.map((s, i) => (
-              <div
-                key={s.id}
-                data-door
-                style={{ transitionDelay: `${i * 90}ms` }}
-                className="w-28 shrink-0 translate-y-10 snap-center opacity-0 transition-[opacity,translate] duration-[800ms] ease-[cubic-bezier(.2,.8,.2,1)] data-[in=1]:translate-y-0 data-[in=1]:opacity-100 motion-reduce:transition-none sm:w-[calc((100%-6rem)/7)] sm:max-w-[9.5rem] sm:shrink"
+        <div ref={box} className="flex w-full snap-x gap-4 overflow-x-auto px-2 pt-4 sm:justify-between sm:overflow-visible">
+          {SERVICES.map((s, i) => (
+            <div
+              key={s.id}
+              data-door
+              style={{ transitionDelay: `${i * 90}ms` }}
+              className={`relative w-28 shrink-0 translate-y-10 snap-center opacity-0 transition-[opacity,translate] duration-[800ms] ease-[cubic-bezier(.2,.8,.2,1)] data-[in=1]:translate-y-0 data-[in=1]:opacity-100 motion-reduce:transition-none sm:w-[calc((100%-6rem)/7)] sm:max-w-[9.5rem] sm:shrink ${
+                active === i ? "z-30" : "z-0"
+              }`}
+            >
+              <button
+                type="button"
+                aria-label={`${s.title}: ${s.text}. Click to see my projects.`}
+                onClick={() => (active === i ? goToProjects() : enter(i))}
+                onPointerEnter={(e) => e.pointerType === "mouse" && enter(i)}
+                onPointerLeave={(e) => e.pointerType === "mouse" && leave()}
+                onFocus={() => enter(i)}
+                onBlur={leave}
+                className="block w-full cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent"
               >
-                <button
-                  type="button"
-                  aria-label={`${s.title}: ${s.text}. Click to enter.`}
-                  onClick={() => setView(i)}
-                  onPointerEnter={(e) => e.pointerType === "mouse" && setHover(i)}
-                  onPointerLeave={(e) => e.pointerType === "mouse" && setHover(null)}
-                  onFocus={() => setHover(i)}
-                  onBlur={() => setHover(null)}
-                  className="block w-full cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent"
+                <DoorArt index={i} title={s.title} open={active === i} />
+              </button>
+
+              {/* the words, right beside the door (left half of the hallway: on its right; right half: on its left) */}
+              {active === i && (
+                <div
+                  className={`pointer-events-none absolute top-0 hidden w-72 rounded-2xl border border-foreground/15 bg-background/90 p-5 shadow-[0_20px_50px_-20px_rgba(0,0,0,0.8)] backdrop-blur-md transition-[opacity,translate] duration-300 ease-[cubic-bezier(.2,.8,.2,1)] starting:opacity-0 motion-reduce:transition-none sm:block ${
+                    i < 4
+                      ? "left-[calc(100%+0.75rem)] starting:-translate-x-3"
+                      : "right-[calc(100%+0.75rem)] starting:translate-x-3"
+                  }`}
                 >
-                  <DoorArt index={i} title={s.title} open={hover === i} />
-                </button>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <div
-            key={current.id}
-            aria-live="polite"
-            className="grid w-full items-end gap-8 transition-[opacity,translate] duration-500 ease-[cubic-bezier(.2,.8,.2,1)] starting:translate-y-4 starting:opacity-0 motion-reduce:transition-none sm:grid-cols-[14rem_minmax(0,1fr)] sm:gap-16 lg:grid-cols-[14rem_minmax(0,30rem)] lg:justify-center"
-          >
-            <div className="mx-auto w-44 sm:w-full">
-              <DoorArt index={view ?? 0} title={current.title} open />
+                  <Info s={s} />
+                  <p className="mt-4 font-mono text-[11px] uppercase tracking-widest text-accent-fg">Click to see my projects →</p>
+                </div>
+              )}
             </div>
-            <div className="pb-8 sm:self-center sm:pb-0">
-              <h3 className="text-3xl font-semibold leading-tight tracking-tight sm:text-4xl">
-                {current.title.replace(" (AI)", "")}
-              </h3>
-              <p className="mt-3 font-mono text-xs font-bold uppercase tracking-[0.14em] text-accent-fg">{current.tagline}</p>
-              <ul className="mt-5 grid gap-3">
-                {current.points.map((p) => (
-                  <li key={p} className="flex items-center gap-3 text-base font-medium">
-                    <span
-                      aria-hidden="true"
-                      className="grid size-5 shrink-0 place-items-center rounded-full bg-foreground text-[11px] text-background"
-                    >
-                      ✓
-                    </span>
-                    {p}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </div>
-        )}
+          ))}
+        </div>
       </div>
 
-      {/* controls (same height in both views) */}
-      <div className="mt-6 flex h-10 items-center justify-center gap-3">
-        {view === null ? (
-          <p className="text-center text-sm text-muted">Hover a door to peek inside, click it to enter.</p>
+      {/* on a phone there is no room beside the door, so the words show under the hallway */}
+      <div className="mt-6 min-h-[17rem] sm:hidden" aria-live="polite">
+        {current ? (
+          <div>
+            <Info s={current} />
+            <button
+              type="button"
+              onClick={goToProjects}
+              className="mt-4 rounded-full border border-foreground/15 px-4 py-1.5 font-mono text-[11px] uppercase tracking-widest text-accent-fg"
+            >
+              See my projects →
+            </button>
+          </div>
         ) : (
-          <>
-            <button type="button" onClick={() => setView((view + n - 1) % n)} className={ctrl} aria-label="Previous door">
-              ←
-            </button>
-            <button type="button" onClick={() => setView(null)} className={ctrl}>
-              All doors
-            </button>
-            <button type="button" onClick={() => setView((view + 1) % n)} className={ctrl} aria-label="Next door">
-              →
-            </button>
-          </>
+          <p className="text-center text-sm text-muted">Tap a door to see what is behind it.</p>
         )}
       </div>
+      <p className="mt-6 hidden text-center text-sm text-muted sm:block">
+        Put the mouse on a door to see what is behind it. Click it to see my projects.
+      </p>
     </section>
   );
 }
