@@ -23,7 +23,7 @@ export default function Home() {
           <ServiceCards />
 
           {/* project cards */}
-          <section className="mt-24 grid gap-6 md:grid-cols-3">
+          <section id="projects" className="mt-24 grid scroll-mt-24 gap-6 md:grid-cols-3">
             {["Expense Tracker", "Brick Breaker", "Dice"].map((name) => (
               <article
                 key={name}
