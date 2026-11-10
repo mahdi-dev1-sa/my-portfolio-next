@@ -65,7 +65,8 @@ function wrapLines(g: CanvasRenderingContext2D, text: string, maxW: number) {
 function drawIcon(g: CanvasRenderingContext2D, id: string, x: number, y: number, z: number) {
   g.save();
   g.translate(x, y);
-  g.lineWidth = 3.5;
+  g.scale(z / 76, z / 76);
+  g.lineWidth = 3;
   g.lineCap = "round";
   g.lineJoin = "round";
   const rr = (a: number, b: number, w: number, h: number, r: number) => {
@@ -78,7 +79,7 @@ function drawIcon(g: CanvasRenderingContext2D, id: string, x: number, y: number,
     g.arc(a, b, r, 0, Math.PI * 2);
     g.fill();
   };
-  const s = z;
+  const s = 76;
   switch (id) {
     case "web-development": // browser window with code
       rr(0, s * 0.1, s, s * 0.8, 10);
@@ -181,7 +182,6 @@ function drawCard(card: Card, now: number) {
   const primary = get("--primary", "#7c5cff");
   const accent = get("--accent-fg", "#22d3ee");
   const fg = get("--foreground", "#f4f4f6");
-  const muted = get("--muted", "#9a9aa6");
   const s = SERVICES[card.i];
 
   g.clearRect(0, 0, W, H);
@@ -252,18 +252,31 @@ function drawCard(card: Card, now: number) {
     g.arc(W - 70 - gx * 20, 160 - gy * 20 + 60, 2.2, 0, Math.PI * 2);
     g.fill();
   }
-  g.strokeStyle = rgba(accent, 0.95);
-  g.fillStyle = rgba(accent, 0.95);
-  drawIcon(g, s.id, W - 84 - 76, 40, 76);
+  // big icon in the middle-top, with a soft halo and a thin ring, so each card says what it is at a glance
+  const IC = 150;
+  const icx = W / 2;
+  const icy = 50 + IC / 2;
+  blob(icx, icy, 170, accent, light ? 0.3 : 0.34);
+  g.strokeStyle = rgba(accent, 0.4);
+  g.lineWidth = 3;
+  g.beginPath();
+  g.arc(icx, icy, IC / 2 + 26, 0, Math.PI * 2);
+  g.stroke();
+  g.strokeStyle = rgba(accent, 1);
+  g.fillStyle = rgba(accent, 1);
+  g.shadowColor = rgba(accent, 0.85);
+  g.shadowBlur = 18;
+  drawIcon(g, s.id, icx - IC / 2, icy - IC / 2, IC);
+  g.shadowBlur = 0;
 
   g.textBaseline = "alphabetic";
   g.textAlign = "left";
   g.font = `500 26px ${MONO}`;
   g.fillStyle = accent;
   g.fillText(`${String(card.i + 1).padStart(2, "0")} / ${String(N).padStart(2, "0")}`, 56, 74);
-  g.fillStyle = muted;
+  g.fillStyle = rgba(fg, light ? 0.75 : 0.8);
   g.textAlign = "center";
-  g.font = `400 24px ${MONO}`;
+  g.font = `500 27px ${MONO}`;
   g.fillText(s.text.toUpperCase(), W / 2, H - 52, W - 112);
 
   const fs = 74;
@@ -284,7 +297,7 @@ function drawCard(card: Card, now: number) {
       .join("")
   );
   const lh = fs * 1.2;
-  const y0 = H / 2 + fs * 0.32 - ((lines.length - 1) * lh) / 2;
+  const y0 = H * (lines.length > 1 ? 0.64 : 0.7) + fs * 0.32 - ((lines.length - 1) * lh) / 2;
   g.textAlign = "center";
   g.shadowColor = rgba(accent, 0.7);
   g.shadowBlur = 22;
