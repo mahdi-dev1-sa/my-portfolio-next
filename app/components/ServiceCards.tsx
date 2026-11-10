@@ -1,100 +1,87 @@
 "use client";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { SERVICES } from "../services";
 
-// Each card lives at its own depth, so they move at different speeds and angles (parallax in 3D).
-//   s: scroll speed   z: depth (px)   rx/ry/rz: resting rotation (deg)
-const MOTION = [
-  { s: 1.0, z: 40, rx: 8, ry: -14, rz: -2 },
-  { s: 0.6, z: -20, rx: -6, ry: 10, rz: 1.5 },
-  { s: 1.3, z: 70, rx: 6, ry: 12, rz: 2 },
-  { s: 0.8, z: 0, rx: -8, ry: -10, rz: -1.5 },
-  { s: 0.7, z: 20, rx: 6, ry: 14, rz: 1 },
-  { s: 1.2, z: -30, rx: -6, ry: -12, rz: 2 },
-  { s: 0.9, z: 50, rx: 4, ry: 6, rz: -1 },
-];
+// "Magic happens behind the doors": one arched door per specialization.
+// Hover (or tap) a door and it swings open to show what is behind it.
+const COLORS = ["#1f4fd8", "#6d4bd6", "#8fa9c4", "#d0605a", "#1f9d8f", "#d99a2b", "#c2559a"];
 
-function GlassCard({ index, id, title, text }: { index: number; id: string; title: string; text: string }) {
-  const card = useRef<HTMLElement>(null);
-
-  // hover: tilt toward the pointer and move the light spot (only CSS variables change)
-  const onMove = (e: React.PointerEvent) => {
-    const el = card.current;
-    if (!el) return;
-    const r = el.getBoundingClientRect();
-    const x = (e.clientX - r.left) / r.width;
-    const y = (e.clientY - r.top) / r.height;
-    el.style.setProperty("--ry", `${(x - 0.5) * 14}deg`);
-    el.style.setProperty("--rx", `${(0.5 - y) * 14}deg`);
-    el.style.setProperty("--mx", `${x * 100}%`);
-    el.style.setProperty("--my", `${y * 100}%`);
-  };
-  const onLeave = () => {
-    const el = card.current;
-    if (!el) return;
-    el.style.setProperty("--rx", "0deg");
-    el.style.setProperty("--ry", "0deg");
-  };
+function Door({ index, id, title, text }: { index: number; id: string; title: string; text: string }) {
+  const [open, setOpen] = useState(false);
+  const color = COLORS[index % COLORS.length];
 
   return (
-    // OUTER box: flies through 3D space (transform set by the scroll loop) and flies in when first seen.
-    // INNER card: tilts on hover. Each layer owns a different CSS property, so they never fight.
     <div
-      data-fly
-      className={`opacity-0 [scale:0.8] [translate:0_90px] transition-[opacity,translate,scale] duration-[900ms] ease-[cubic-bezier(.2,.8,.2,1)] data-[in=1]:opacity-100 data-[in=1]:[scale:1] data-[in=1]:[translate:0_0] motion-reduce:transition-none ${
-        index === SERVICES.length - 1 ? "sm:col-span-2" : ""
-      }`}
-      style={{ transitionDelay: `${(index % 4) * 90}ms`, willChange: "transform" }}
+      data-door
+      style={{ transitionDelay: `${(index % 4) * 110}ms` }}
+      className="w-[calc(50%-0.75rem)] translate-y-10 opacity-0 transition-[opacity,translate] duration-[800ms] ease-[cubic-bezier(.2,.8,.2,1)] data-[in=1]:translate-y-0 data-[in=1]:opacity-100 motion-reduce:transition-none sm:w-[calc(25%-1.125rem)]"
     >
-      <article
-        ref={card}
+      <button
+        type="button"
         id={id}
-        onPointerMove={onMove}
-        onPointerLeave={onLeave}
-        className="group relative h-full scroll-mt-10 overflow-hidden rounded-3xl border border-foreground/15 bg-foreground/[0.06] p-6 shadow-[0_8px_40px_-12px_rgba(0,0,0,0.45)] backdrop-blur-xl transition-[transform,border-color] duration-200 ease-out hover:border-accent/60"
-        style={{
-          transform: "perspective(900px) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg))",
-          ["--mx" as string]: "50%",
-          ["--my" as string]: "0%",
-        }}
+        aria-expanded={open}
+        aria-label={`${title}: ${text}`}
+        onClick={() => setOpen((v) => !v)}
+        onPointerEnter={(e) => e.pointerType === "mouse" && setOpen(true)}
+        onPointerLeave={(e) => e.pointerType === "mouse" && setOpen(false)}
+        className="relative mx-auto block aspect-[1/2.05] w-full max-w-[15rem] scroll-mt-24 cursor-pointer [perspective:1100px] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent"
       >
-        {/* soft light that follows the pointer */}
+        {/* door frame (the arch) */}
         <span
           aria-hidden="true"
-          className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100"
-          style={{
-            background:
-              "radial-gradient(240px circle at var(--mx) var(--my), color-mix(in srgb, var(--accent) 22%, transparent), transparent 70%)",
-          }}
-        />
-        {/* glass edge highlight */}
-        <span
-          aria-hidden="true"
-          className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-foreground/40 to-transparent"
+          className="absolute inset-0 rounded-t-[999px] border border-foreground/15 bg-foreground/[0.07] shadow-[0_18px_40px_-18px_rgba(0,0,0,0.7)]"
         />
 
-        <span className="relative text-xs font-semibold tabular-nums tracking-widest text-accent-fg">
-          {String(index + 1).padStart(2, "0")}
+        {/* behind the door: a warm light and what I do */}
+        <span
+          className="absolute inset-[5%] flex flex-col items-center justify-end gap-2 overflow-hidden rounded-t-[999px] pb-[14%] pl-[20%] pr-3 text-center"
+          style={{ background: "radial-gradient(120% 90% at 50% 100%, #fff1bd 0%, #e8b45a 45%, #6b3d12 100%)" }}
+        >
+          <span className="font-mono text-[10px] font-semibold tracking-[0.2em] text-[#4a2a08]">
+            {String(index + 1).padStart(2, "0")}
+          </span>
+          <span className="text-[clamp(0.7rem,1.05vw,0.95rem)] font-semibold leading-tight text-[#2e1904]">{title}</span>
+          <span className="text-[clamp(0.6rem,0.85vw,0.8rem)] leading-snug text-[#4a2a08]">{text}</span>
         </span>
-        <h3 className="relative mt-4 text-xl font-semibold leading-snug">{title}</h3>
-        <p className="relative mt-2 text-sm text-muted">{text}</p>
-      </article>
+
+        {/* the door itself: swings open around its left edge */}
+        <span
+          aria-hidden="true"
+          className="absolute inset-[5%] origin-left overflow-hidden rounded-t-[999px] shadow-[inset_0_0_30px_rgba(0,0,0,0.35)] transition-transform duration-[750ms] ease-[cubic-bezier(.3,.8,.2,1)] [transform-style:preserve-3d]"
+          style={{
+            background: `linear-gradient(180deg, ${color}, color-mix(in srgb, ${color} 70%, #000))`,
+            transform: open ? "rotateY(-78deg)" : "rotateY(0deg)",
+          }}
+        >
+          {/* wood grain */}
+          <span
+            className="absolute inset-0"
+            style={{
+              backgroundImage:
+                "repeating-linear-gradient(90deg, rgba(255,255,255,0.08) 0 1px, transparent 1px 7px)",
+            }}
+          />
+          {/* brass name plate */}
+          <span className="absolute left-1/2 top-[27%] w-[74%] -translate-x-1/2 rounded-[2px] bg-[#ead8b2] px-1 py-1 text-center font-mono text-[clamp(6px,0.75vw,10px)] font-semibold uppercase leading-tight tracking-wider text-[#4a3515] shadow-[0_1px_3px_rgba(0,0,0,0.45)]">
+            {title.replace(" (AI)", "")}
+          </span>
+          {/* handle and keyhole */}
+          <span className="absolute right-[11%] top-[60%] h-[1.7%] w-[22%] rounded-full bg-gradient-to-b from-[#f1e6c9] to-[#a38c5f] shadow-[0_1px_2px_rgba(0,0,0,0.5)]" />
+          <span className="absolute right-[13%] top-[66%] h-[3.2%] w-[5%] rounded-full bg-[#2a2113]/80" />
+        </span>
+      </button>
     </div>
   );
 }
 
 export default function ServiceCards() {
-  const section = useRef<HTMLElement>(null);
-  const grid = useRef<HTMLDivElement>(null);
+  const box = useRef<HTMLDivElement>(null);
 
+  // doors rise in the first time they appear on screen
   useEffect(() => {
-    const sec = section.current;
-    const box = grid.current;
-    if (!sec || !box) return;
-    const cards = Array.from(box.querySelectorAll<HTMLElement>("[data-fly]"));
-    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-
-    // cards fly in (from far away, small and faded) when they first appear on screen
+    const el = box.current;
+    if (!el) return;
+    const doors = Array.from(el.querySelectorAll<HTMLElement>("[data-door]"));
     const seen = new IntersectionObserver(
       (entries) => {
         for (const e of entries) {
@@ -106,76 +93,23 @@ export default function ServiceCards() {
       },
       { threshold: 0.15 }
     );
-    cards.forEach((c) => seen.observe(c));
-    if (reduce) {
-      cards.forEach((c) => (c.dataset.in = "1"));
-      return () => seen.disconnect();
-    }
-
-    // pointer position (-1..1), smoothed so the cards glide instead of jumping
-    const mouse = { x: 0, y: 0, sx: 0, sy: 0 };
-    const onMove = (e: PointerEvent) => {
-      mouse.x = (e.clientX / window.innerWidth - 0.5) * 2;
-      mouse.y = (e.clientY / window.innerHeight - 0.5) * 2;
-    };
-    window.addEventListener("pointermove", onMove, { passive: true });
-
-    // run the loop only while the section is on screen
-    let raf = 0;
-    let visible = false;
-    const t0 = performance.now();
-    const frame = (now: number) => {
-      raf = requestAnimationFrame(frame);
-      const t = (now - t0) / 1000;
-      mouse.sx += (mouse.x - mouse.sx) * 0.06;
-      mouse.sy += (mouse.y - mouse.sy) * 0.06;
-
-      const r = sec.getBoundingClientRect();
-      const vh = window.innerHeight;
-      // p: -1 when the section is below the screen, 0 when centered, +1 when above
-      const p = Math.max(-1.2, Math.min(1.2, (r.top + r.height / 2 - vh / 2) / vh));
-      const small = window.innerWidth < 768;
-      const k = small ? 0.5 : 1; // calmer on phones
-
-      cards.forEach((el, i) => {
-        const m = MOTION[i];
-        const y = p * m.s * 70 * k + Math.sin(t * 0.9 + i * 1.3) * 9 * k;
-        const x = mouse.sx * m.z * 0.35 * k + Math.cos(t * 0.6 + i) * 5 * k;
-        const z = m.z * k - Math.abs(p) * 80 * k;
-        const rx = (m.rx + p * 16 - mouse.sy * 5) * k;
-        const ry = (m.ry - p * 20 + mouse.sx * 7) * k;
-        const rz = (m.rz + Math.sin(t * 0.5 + i) * 1.4) * k;
-        el.style.transform = `perspective(1100px) translate3d(${x.toFixed(1)}px, ${y.toFixed(1)}px, ${z.toFixed(1)}px) rotateX(${rx.toFixed(2)}deg) rotateY(${ry.toFixed(2)}deg) rotateZ(${rz.toFixed(2)}deg)`;
-      });
-    };
-    const watch = new IntersectionObserver(
-      ([entry]) => {
-        const now = entry.isIntersecting;
-        if (now && !visible) raf = requestAnimationFrame(frame);
-        if (!now) cancelAnimationFrame(raf);
-        visible = now;
-      },
-      { rootMargin: "200px" }
-    );
-    watch.observe(sec);
-
-    return () => {
-      cancelAnimationFrame(raf);
-      watch.disconnect();
-      seen.disconnect();
-      window.removeEventListener("pointermove", onMove);
-    };
+    doors.forEach((d) => seen.observe(d));
+    return () => seen.disconnect();
   }, []);
 
   return (
-    <section ref={section} aria-labelledby="specializations" className="mt-24">
-      <p className="text-xs font-semibold uppercase tracking-widest text-accent-fg">What I do</p>
-      <h2 id="specializations" className="mt-3 text-3xl font-bold md:text-4xl">
-        My specializations
+    <section aria-labelledby="specializations" className="mt-24">
+      <p className="text-center text-xs font-semibold uppercase tracking-widest text-accent-fg">My specializations</p>
+      <h2
+        id="specializations"
+        className="mx-auto mt-3 max-w-3xl text-center text-[clamp(2rem,5.5vw,4rem)] font-semibold leading-[1.05] tracking-tight"
+      >
+        Magic happens behind the doors
       </h2>
-      <div ref={grid} className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+      <p className="mt-3 text-center text-sm text-muted">Hover a door (or tap it) to see what I do.</p>
+      <div ref={box} className="mt-14 flex flex-wrap justify-center gap-x-6 gap-y-12 border-b border-foreground/15 pb-10">
         {SERVICES.map((s, i) => (
-          <GlassCard key={s.id} index={i} {...s} />
+          <Door key={s.id} index={i} {...s} />
         ))}
       </div>
     </section>
