@@ -1,11 +1,11 @@
 // One list of specializations, used by the hero carousel and by the glass cards.
 // The ids match the nav links (#web-development ...).
 export const SERVICES = [
-  { id: "web-development", title: "Web Development", text: "Fast, modern websites built with Next.js." },
-  { id: "app-development", title: "App Development", text: "Mobile apps that feel smooth and simple." },
-  { id: "video-editing", title: "Video Editing", text: "Reels and short videos with motion and sound." },
-  { id: "game-development", title: "Game Development", text: "Small games, from first prototype to play." },
-  { id: "artificial-intelligence", title: "Artificial Intelligence (AI)", text: "AI tools and automations that save time." },
-  { id: "ui-ux-design", title: "UI/UX Design", text: "Clean interfaces people enjoy using." },
-  { id: "graphic-design", title: "Graphic Design", text: "Logos, posters and social media visuals." },
+  { id: "web-development", title: "Web Development", text: "Fast, modern websites built with Next.js.", tagline: "End to end, from sketch to live site", points: ["Discovery & planning", "UX & visual design", "Front-end & back-end development", "Technical SEO & performance", "Analytics, launch & ongoing support"] },
+  { id: "app-development", title: "App Development", text: "Mobile apps that feel smooth and simple.", tagline: "Smooth iOS apps, idea to App Store", points: ["Idea & app flow", "Native-feeling interface", "SwiftUI development", "Testing on real devices", "App Store launch & updates"] },
+  { id: "video-editing", title: "Video Editing", text: "Reels and short videos with motion and sound.", tagline: "Short videos that hold attention", points: ["Reels & short-form edits", "Motion graphics & titles", "Sound design & music sync", "Color & pacing", "Fast delivery for social media"] },
+  { id: "game-development", title: "Game Development", text: "Small games, from first prototype to play.", tagline: "From first prototype to play", points: ["Game idea & prototype", "Simple, satisfying mechanics", "Polished controls & feedback", "Sound & visual effects", "Release on mobile"] },
+  { id: "artificial-intelligence", title: "Artificial Intelligence (AI)", text: "AI tools and automations that save time.", tagline: "Automations that save time", points: ["Find tasks worth automating", "AI tools & chat assistants", "Connect your apps together", "Testing & safe rollout", "Support after launch"] },
+  { id: "ui-ux-design", title: "UI/UX Design", text: "Clean interfaces people enjoy using.", tagline: "Interfaces people enjoy using", points: ["User research & flows", "Wireframes & prototypes", "Clean visual design", "Design systems", "Hand-off ready for developers"] },
+  { id: "graphic-design", title: "Graphic Design", text: "Logos, posters and social media visuals.", tagline: "Visuals that look like you", points: ["Logo & brand identity", "Posters & print layouts", "Social media visuals", "Color & typography", "Files ready to use anywhere"] },
 ];
