@@ -2,7 +2,7 @@
 import dynamic from "next/dynamic";
 import Hero from "./components/Hero";
 import ServiceCards from "./components/ServiceCards";
-import SteamTrain from "./components/SteamTrain";
+import Story from "./components/Story";
 
 // three.js is big, so load it in the browser only (never on the server)
 const ParticleField = dynamic(() => import("./components/ParticleField"), { ssr: false });
@@ -13,24 +13,13 @@ export default function Home() {
       <ParticleField />
 
       <div className="relative z-10">
-        {/* first thing visitors see: name + 3D glass cards with my specializations */}
+        {/* first screen: name + 3D carousel of glass cards with my specializations */}
         <Hero />
 
+        <Story />
+
         <div className="mx-auto max-w-5xl px-6">
-          {/* short bio */}
-          <p className="max-w-2xl pt-4 text-base leading-relaxed text-muted md:text-lg">
-            I&apos;m a UI/UX designer and developer who builds apps, games and web experiences people
-            enjoy using. I work across web, iOS, video editing, graphic design and AI, so an idea can go
-            from a sketch to something you can tap, play or watch. I care about clean interfaces, smooth
-            motion and details that feel considered.
-          </p>
-
-          {/* skills steam train: full-bleed, right under the bio */}
-          <div className="relative left-1/2 mt-8 w-screen -translate-x-1/2">
-            <SteamTrain />
-          </div>
-
-          {/* glass cards: my specializations (nav links jump here) */}
+          {/* glass cards: my specializations */}
           <ServiceCards />
 
           {/* project cards */}
