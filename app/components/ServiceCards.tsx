@@ -3,7 +3,8 @@ import { useEffect, useRef, useState } from "react";
 import { SERVICES } from "../services";
 
 // "Magic happens behind the doors": one arched door per specialization.
-// Hover (or tap) a door and it swings open, with the sound of a creaking door, to show what is behind it.
+// Hover (or tap) a door and it opens a little, inward, with the sound of a creaking door.
+// What I do with that specialization shows on the side.
 const COLORS = ["#1f4fd8", "#6d4bd6", "#8fa9c4", "#d0605a", "#1f9d8f", "#d99a2b", "#c2559a"];
 
 // ---------- door sounds (made with the Web Audio API, so no sound files are needed) ----------
@@ -108,39 +109,33 @@ function Door({
   id,
   title,
   text,
-  sound,
+  open,
+  onOpen,
+  onToggle,
 }: {
   index: number;
   id: string;
   title: string;
   text: string;
-  sound: boolean;
+  open: boolean;
+  onOpen: () => void;
+  onToggle: () => void;
 }) {
-  const [open, setOpen] = useState(false);
-  const openRef = useRef(false);
   const color = COLORS[index % COLORS.length];
-
-  const set = (next: boolean) => {
-    if (openRef.current === next) return;
-    openRef.current = next;
-    setOpen(next);
-    if (sound) playDoor(next ? "open" : "close");
-  };
 
   return (
     <div
       data-door
       style={{ transitionDelay: `${(index % 4) * 110}ms` }}
-      className="w-[calc(50%-0.75rem)] translate-y-10 opacity-0 transition-[opacity,translate] duration-[800ms] ease-[cubic-bezier(.2,.8,.2,1)] data-[in=1]:translate-y-0 data-[in=1]:opacity-100 motion-reduce:transition-none sm:w-[calc(25%-1.125rem)]"
+      className="w-[calc(50%-0.75rem)] translate-y-10 opacity-0 transition-[opacity,translate] duration-[800ms] ease-[cubic-bezier(.2,.8,.2,1)] data-[in=1]:translate-y-0 data-[in=1]:opacity-100 motion-reduce:transition-none sm:w-[calc(25%-1.125rem)] lg:w-[calc(25%-1.125rem)]"
     >
       <button
         type="button"
         id={id}
         aria-expanded={open}
         aria-label={`${title}: ${text}`}
-        onClick={() => set(!open)}
-        onPointerEnter={(e) => e.pointerType === "mouse" && set(true)}
-        onPointerLeave={(e) => e.pointerType === "mouse" && set(false)}
+        onClick={onToggle}
+        onPointerEnter={(e) => e.pointerType === "mouse" && onOpen()}
         className="relative mx-auto block aspect-[1/2.05] w-full max-w-[15rem] scroll-mt-24 cursor-pointer [perspective:1100px] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent"
       >
         {/* door frame (the arch) */}
@@ -149,25 +144,24 @@ function Door({
           className="absolute inset-0 rounded-t-[999px] border border-foreground/15 bg-foreground/[0.07] shadow-[0_18px_40px_-18px_rgba(0,0,0,0.7)]"
         />
 
-        {/* behind the door: a warm light and what I do */}
+        {/* behind the door: a warm light */}
         <span
-          className="absolute inset-[5%] flex flex-col items-center justify-end gap-2 overflow-hidden rounded-t-[999px] pb-[14%] pl-[20%] pr-3 text-center"
+          aria-hidden="true"
+          className="absolute inset-[5%] flex items-end justify-center overflow-hidden rounded-t-[999px] pb-[10%]"
           style={{ background: "radial-gradient(120% 90% at 50% 100%, #fff1bd 0%, #e8b45a 45%, #6b3d12 100%)" }}
         >
-          <span className="font-mono text-[10px] font-semibold tracking-[0.2em] text-[#4a2a08]">
+          <span className="font-mono text-[11px] font-semibold tracking-[0.2em] text-[#4a2a08]">
             {String(index + 1).padStart(2, "0")}
           </span>
-          <span className="text-[clamp(0.7rem,1.05vw,0.95rem)] font-semibold leading-tight text-[#2e1904]">{title}</span>
-          <span className="text-[clamp(0.6rem,0.85vw,0.8rem)] leading-snug text-[#4a2a08]">{text}</span>
         </span>
 
-        {/* the door itself: swings open around its left edge */}
+        {/* the door itself: opens a little, inward, around its left edge */}
         <span
           aria-hidden="true"
           className="absolute inset-[5%] origin-left overflow-hidden rounded-t-[999px] shadow-[inset_0_0_30px_rgba(0,0,0,0.35)] transition-transform duration-[750ms] ease-[cubic-bezier(.3,.8,.2,1)] [transform-style:preserve-3d]"
           style={{
             background: `linear-gradient(180deg, ${color}, color-mix(in srgb, ${color} 70%, #000))`,
-            transform: open ? "rotateY(-78deg)" : "rotateY(0deg)",
+            transform: open ? "rotateY(28deg)" : "rotateY(0deg)",
           }}
         >
           {/* wood grain */}
@@ -217,6 +211,14 @@ function Door({
 export default function ServiceCards() {
   const box = useRef<HTMLDivElement>(null);
   const [sound, setSound] = useState(true);
+  const [active, setActive] = useState<number | null>(null);
+
+  const choose = (i: number | null) => {
+    if (i === active) return;
+    setActive(i);
+    if (sound) playDoor(i === null ? "close" : "open");
+  };
+  const current = active === null ? null : SERVICES[active];
 
   // doors rise in the first time they appear on screen
   useEffect(() => {
@@ -272,10 +274,45 @@ export default function ServiceCards() {
           Sound: {sound ? "on" : "off"}
         </button>
       </div>
-      <div ref={box} className="mt-12 flex flex-wrap justify-center gap-x-6 gap-y-12 border-b border-foreground/15 pb-10">
-        {SERVICES.map((s, i) => (
-          <Door key={s.id} index={i} {...s} sound={sound} />
-        ))}
+      <div className="mt-12 grid items-center gap-10 border-b border-foreground/15 pb-10 lg:grid-cols-[minmax(0,1fr)_21rem] lg:gap-14">
+        <div ref={box} className="flex flex-wrap justify-center gap-x-6 gap-y-12">
+          {SERVICES.map((s, i) => (
+            <Door
+              key={s.id}
+              index={i}
+              id={s.id}
+              title={s.title}
+              text={s.text}
+              open={active === i}
+              onOpen={() => choose(i)}
+              onToggle={() => choose(active === i ? null : i)}
+            />
+          ))}
+        </div>
+
+        {/* the words appear on the side of the open door */}
+        <div aria-live="polite" className="min-h-[15rem] lg:min-h-[18rem]">
+          {current ? (
+            <div key={current.id} className="transition-[opacity,translate] duration-500 ease-[cubic-bezier(.2,.8,.2,1)] starting:-translate-x-4 starting:opacity-0 motion-reduce:transition-none">
+              <h3 className="text-3xl font-semibold leading-tight tracking-tight sm:text-4xl">
+                {current.title.replace(" (AI)", "")}
+              </h3>
+              <p className="mt-3 font-mono text-xs font-bold uppercase tracking-[0.14em] text-accent-fg">{current.tagline}</p>
+              <ul className="mt-5 grid gap-3">
+                {current.points.map((p) => (
+                  <li key={p} className="flex items-center gap-3 text-base font-medium">
+                    <span aria-hidden="true" className="grid size-5 shrink-0 place-items-center rounded-full bg-foreground text-[11px] text-background">
+                      ✓
+                    </span>
+                    {p}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ) : (
+            <p className="text-center text-muted lg:text-left">Open a door to see what is behind it.</p>
+          )}
+        </div>
       </div>
     </section>
   );
