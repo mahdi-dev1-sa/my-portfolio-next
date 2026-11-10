@@ -17,7 +17,7 @@ export default function Hero() {
   const track = useRef<HTMLDivElement>(null);
 
   return (
-    <div ref={track} id="hero-track" data-intro="1" className="relative h-[700vh]">
+    <div ref={track} id="hero-track" data-intro="1" className="relative h-[1150vh]">
       <div className="ambient-purple sticky top-0 h-svh overflow-hidden">
         {/* name: two lines that run across the screen in opposite directions as you scroll */}
         <h1 aria-label="Hi, I'm Mahdi." className={`${brush.className} absolute inset-0 z-10 font-normal`}>
