@@ -60,6 +60,115 @@ function wrapLines(g: CanvasRenderingContext2D, text: string, maxW: number) {
   return lines;
 }
 
+
+// small line icons, one per specialization (drawn inside a box of size z at x,y)
+function drawIcon(g: CanvasRenderingContext2D, id: string, x: number, y: number, z: number) {
+  g.save();
+  g.translate(x, y);
+  g.lineWidth = 3.5;
+  g.lineCap = "round";
+  g.lineJoin = "round";
+  const rr = (a: number, b: number, w: number, h: number, r: number) => {
+    g.beginPath();
+    g.roundRect(a, b, w, h, r);
+    g.stroke();
+  };
+  const dotAt = (a: number, b: number, r: number) => {
+    g.beginPath();
+    g.arc(a, b, r, 0, Math.PI * 2);
+    g.fill();
+  };
+  const s = z;
+  switch (id) {
+    case "web-development": // browser window with code
+      rr(0, s * 0.1, s, s * 0.8, 10);
+      g.beginPath();
+      g.moveTo(0, s * 0.3);
+      g.lineTo(s, s * 0.3);
+      g.stroke();
+      dotAt(s * 0.14, s * 0.2, 2.5);
+      dotAt(s * 0.26, s * 0.2, 2.5);
+      g.beginPath();
+      g.moveTo(s * 0.38, s * 0.5);
+      g.lineTo(s * 0.26, s * 0.62);
+      g.lineTo(s * 0.38, s * 0.74);
+      g.moveTo(s * 0.62, s * 0.5);
+      g.lineTo(s * 0.74, s * 0.62);
+      g.lineTo(s * 0.62, s * 0.74);
+      g.stroke();
+      break;
+    case "app-development": // phone
+      rr(s * 0.22, 0, s * 0.56, s, 12);
+      g.beginPath();
+      g.moveTo(s * 0.42, s * 0.1);
+      g.lineTo(s * 0.58, s * 0.1);
+      g.moveTo(s * 0.42, s * 0.9);
+      g.lineTo(s * 0.58, s * 0.9);
+      g.stroke();
+      break;
+    case "video-editing": // clip with play + timeline
+      rr(0, s * 0.1, s, s * 0.58, 10);
+      g.beginPath();
+      g.moveTo(s * 0.42, s * 0.25);
+      g.lineTo(s * 0.62, s * 0.39);
+      g.lineTo(s * 0.42, s * 0.53);
+      g.closePath();
+      g.stroke();
+      g.beginPath();
+      g.moveTo(0, s * 0.86);
+      g.lineTo(s, s * 0.86);
+      g.stroke();
+      dotAt(s * 0.34, s * 0.86, 5);
+      break;
+    case "game-development": // gamepad
+      rr(0, s * 0.25, s, s * 0.5, s * 0.22);
+      g.beginPath();
+      g.moveTo(s * 0.25, s * 0.42);
+      g.lineTo(s * 0.25, s * 0.58);
+      g.moveTo(s * 0.17, s * 0.5);
+      g.lineTo(s * 0.33, s * 0.5);
+      g.stroke();
+      dotAt(s * 0.68, s * 0.44, 3.5);
+      dotAt(s * 0.8, s * 0.56, 3.5);
+      break;
+    case "artificial-intelligence": { // sparkles
+      const star = (cx: number, cy: number, r: number) => {
+        g.beginPath();
+        g.moveTo(cx, cy - r);
+        g.quadraticCurveTo(cx, cy, cx + r, cy);
+        g.quadraticCurveTo(cx, cy, cx, cy + r);
+        g.quadraticCurveTo(cx, cy, cx - r, cy);
+        g.quadraticCurveTo(cx, cy, cx, cy - r);
+        g.stroke();
+      };
+      star(s * 0.42, s * 0.56, s * 0.38);
+      star(s * 0.84, s * 0.18, s * 0.14);
+      star(s * 0.86, s * 0.82, s * 0.1);
+      break;
+    }
+    case "ui-ux-design": // bezier curve with anchor squares
+      g.beginPath();
+      g.moveTo(s * 0.1, s * 0.85);
+      g.bezierCurveTo(s * 0.1, s * 0.1, s * 0.9, s * 0.9, s * 0.9, s * 0.15);
+      g.stroke();
+      rr(s * 0.02, s * 0.77, s * 0.16, s * 0.16, 3);
+      rr(s * 0.82, s * 0.07, s * 0.16, s * 0.16, 3);
+      break;
+    default: // graphic design: circle + square + triangle
+      g.beginPath();
+      g.arc(s * 0.3, s * 0.34, s * 0.26, 0, Math.PI * 2);
+      g.stroke();
+      rr(s * 0.5, s * 0.1, s * 0.4, s * 0.4, 6);
+      g.beginPath();
+      g.moveTo(s * 0.5, s * 0.92);
+      g.lineTo(s * 0.74, s * 0.52);
+      g.lineTo(s * 0.98, s * 0.92);
+      g.closePath();
+      g.stroke();
+  }
+  g.restore();
+}
+
 // Draw a card: translucent glass, slow colour blobs, rim light and the title (letters scramble, then settle).
 function drawCard(card: Card, now: number) {
   const g = card.cv.getContext("2d")!;
@@ -115,6 +224,37 @@ function drawCard(card: Card, now: number) {
   g.beginPath();
   g.roundRect(2, 2, W - 4, H - 4, 38);
   g.stroke();
+
+  // decoration: corner brackets, a faint dot grid, and a small line icon for this specialization
+  g.strokeStyle = rgba(accent, 0.8);
+  g.lineWidth = 4;
+  g.lineCap = "round";
+  const L = 34;
+  const m = 26;
+  for (const [cx, cy, dx, dy] of [
+    [m, m, 1, 1],
+    [W - m, m, -1, 1],
+    [m, H - m, 1, -1],
+    [W - m, H - m, -1, -1],
+  ] as const) {
+    g.beginPath();
+    g.moveTo(cx + dx * L, cy);
+    g.lineTo(cx, cy);
+    g.lineTo(cx, cy + dy * L);
+    g.stroke();
+  }
+  g.fillStyle = rgba(fg, light ? 0.22 : 0.2);
+  for (let gx = 0; gx < 6; gx++) for (let gy = 0; gy < 4; gy++) {
+    g.beginPath();
+    g.arc(70 + gx * 20, H - 150 + gy * 20, 2.2, 0, Math.PI * 2);
+    g.fill();
+    g.beginPath();
+    g.arc(W - 70 - gx * 20, 160 - gy * 20 + 60, 2.2, 0, Math.PI * 2);
+    g.fill();
+  }
+  g.strokeStyle = rgba(accent, 0.95);
+  g.fillStyle = rgba(accent, 0.95);
+  drawIcon(g, s.id, W - 84 - 76, 40, 76);
 
   g.textBaseline = "alphabetic";
   g.textAlign = "left";
