@@ -3,106 +3,8 @@ import { useEffect, useRef, useState } from "react";
 import { SERVICES } from "../services";
 
 // "Magic happens behind the doors": one arched door per specialization.
-// Hover (or tap) a door and it opens a little, inward, with the sound of a creaking door.
-// What I do with that specialization shows on the side.
+// Hover (or tap) a door and it opens a little, inward. What I do with that specialization shows on the side.
 const COLORS = ["#1f4fd8", "#6d4bd6", "#8fa9c4", "#d0605a", "#1f9d8f", "#d99a2b", "#c2559a"];
-
-// ---------- door sounds (made with the Web Audio API, so no sound files are needed) ----------
-let ctx: AudioContext | null = null;
-function audio() {
-  if (typeof window === "undefined") return null;
-  if (!ctx) {
-    const AC = window.AudioContext || (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
-    if (!AC) return null;
-    ctx = new AC();
-  }
-  return ctx;
-}
-// a short burst of noise (the click of a latch, the thud of a door)
-function noise(c: AudioContext, dur: number) {
-  const buf = c.createBuffer(1, Math.max(1, Math.floor(c.sampleRate * dur)), c.sampleRate);
-  const d = buf.getChannelData(0);
-  for (let i = 0; i < d.length; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / d.length);
-  const src = c.createBufferSource();
-  src.buffer = buf;
-  return src;
-}
-function playDoor(kind: "open" | "close") {
-  const c = audio();
-  if (!c || c.state !== "running") return; // browsers keep sound locked until the first click
-  const t = c.currentTime;
-  const master = c.createGain();
-  master.gain.value = kind === "open" ? 0.55 : 0.4;
-  master.connect(c.destination);
-
-  if (kind === "open") {
-    // 1) latch click
-    const click = noise(c, 0.05);
-    const hp = c.createBiquadFilter();
-    hp.type = "highpass";
-    hp.frequency.value = 1800;
-    const cg = c.createGain();
-    cg.gain.setValueAtTime(0.9, t);
-    cg.gain.exponentialRampToValueAtTime(0.001, t + 0.05);
-    click.connect(hp).connect(cg).connect(master);
-    click.start(t);
-    // 2) wooden creak: two rough tones that glide up and back down, with a little wobble
-    const bp = c.createBiquadFilter();
-    bp.type = "bandpass";
-    bp.frequency.setValueAtTime(650, t + 0.08);
-    bp.frequency.linearRampToValueAtTime(1150, t + 0.55);
-    bp.frequency.linearRampToValueAtTime(800, t + 1.0);
-    bp.Q.value = 5;
-    const eg = c.createGain();
-    eg.gain.setValueAtTime(0.0001, t + 0.08);
-    eg.gain.linearRampToValueAtTime(0.5, t + 0.25);
-    eg.gain.linearRampToValueAtTime(0.32, t + 0.7);
-    eg.gain.exponentialRampToValueAtTime(0.0008, t + 1.05);
-    bp.connect(eg).connect(master);
-    const lfo = c.createOscillator();
-    lfo.frequency.value = 24;
-    const lfoGain = c.createGain();
-    lfoGain.gain.value = 14;
-    lfo.connect(lfoGain);
-    [
-      { type: "sawtooth" as const, f0: 130, f1: 215, f2: 160 },
-      { type: "square" as const, f0: 197, f1: 322, f2: 241 },
-    ].forEach((o) => {
-      const osc = c.createOscillator();
-      osc.type = o.type;
-      osc.frequency.setValueAtTime(o.f0, t + 0.08);
-      osc.frequency.linearRampToValueAtTime(o.f1, t + 0.55);
-      osc.frequency.linearRampToValueAtTime(o.f2, t + 1.0);
-      lfoGain.connect(osc.frequency);
-      osc.connect(bp);
-      osc.start(t + 0.08);
-      osc.stop(t + 1.1);
-    });
-    lfo.start(t + 0.08);
-    lfo.stop(t + 1.1);
-  } else {
-    // soft thud when the door closes
-    const th = noise(c, 0.18);
-    const lp = c.createBiquadFilter();
-    lp.type = "lowpass";
-    lp.frequency.value = 420;
-    const tg = c.createGain();
-    tg.gain.setValueAtTime(0.9, t);
-    tg.gain.exponentialRampToValueAtTime(0.001, t + 0.18);
-    th.connect(lp).connect(tg).connect(master);
-    th.start(t);
-    const o = c.createOscillator();
-    o.type = "sine";
-    o.frequency.setValueAtTime(95, t);
-    o.frequency.exponentialRampToValueAtTime(42, t + 0.16);
-    const og = c.createGain();
-    og.gain.setValueAtTime(0.8, t);
-    og.gain.exponentialRampToValueAtTime(0.001, t + 0.18);
-    o.connect(og).connect(master);
-    o.start(t);
-    o.stop(t + 0.2);
-  }
-}
 
 function Door({
   index,
@@ -210,13 +112,11 @@ function Door({
 
 export default function ServiceCards() {
   const box = useRef<HTMLDivElement>(null);
-  const [sound, setSound] = useState(true);
   const [active, setActive] = useState<number | null>(null);
 
   const choose = (i: number | null) => {
     if (i === active) return;
     setActive(i);
-    if (sound) playDoor(i === null ? "close" : "open");
   };
   const current = active === null ? null : SERVICES[active];
 
@@ -240,20 +140,6 @@ export default function ServiceCards() {
     return () => seen.disconnect();
   }, []);
 
-  // browsers only allow sound after the visitor has clicked or pressed a key once
-  useEffect(() => {
-    const unlock = () => {
-      const c = audio();
-      if (c && c.state === "suspended") c.resume();
-    };
-    window.addEventListener("pointerdown", unlock);
-    window.addEventListener("keydown", unlock);
-    return () => {
-      window.removeEventListener("pointerdown", unlock);
-      window.removeEventListener("keydown", unlock);
-    };
-  }, []);
-
   return (
     <section aria-labelledby="specializations" className="mt-24">
       <p className="text-center text-xs font-semibold uppercase tracking-widest text-accent-fg">My specializations</p>
@@ -264,17 +150,7 @@ export default function ServiceCards() {
         Magic happens behind the doors
       </h2>
       <p className="mt-3 text-center text-sm text-muted">Hover a door (or tap it) to open it.</p>
-      <div className="mt-3 flex justify-center">
-        <button
-          type="button"
-          onClick={() => setSound((v) => !v)}
-          aria-pressed={sound}
-          className="rounded-full border border-foreground/15 px-3 py-1 font-mono text-[11px] uppercase tracking-widest text-muted transition hover:border-accent hover:text-accent-fg"
-        >
-          Sound: {sound ? "on" : "off"}
-        </button>
-      </div>
-      <div className="mt-12 grid items-center gap-10 border-b border-foreground/15 pb-10 lg:grid-cols-[minmax(0,1fr)_21rem] lg:gap-14">
+      <div className="mt-12 grid items-start gap-10 border-b border-foreground/15 pb-10 lg:grid-cols-[minmax(0,1fr)_21rem] lg:gap-14">
         <div ref={box} className="flex flex-wrap justify-center gap-x-6 gap-y-12">
           {SERVICES.map((s, i) => (
             <Door
@@ -291,7 +167,7 @@ export default function ServiceCards() {
         </div>
 
         {/* the words appear on the side of the open door */}
-        <div aria-live="polite" className="min-h-[15rem] lg:min-h-[18rem]">
+        <div aria-live="polite" className="h-[19rem] lg:sticky lg:top-28">
           {current ? (
             <div key={current.id} className="transition-[opacity,translate] duration-500 ease-[cubic-bezier(.2,.8,.2,1)] starting:-translate-x-4 starting:opacity-0 motion-reduce:transition-none">
               <h3 className="text-3xl font-semibold leading-tight tracking-tight sm:text-4xl">
