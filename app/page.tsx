@@ -20,7 +20,7 @@ export default function Home() {
 
         <div className="mx-auto max-w-5xl px-6">
           {/* glass cards: my specializations */}
-          <ServiceCards />
+          {/* <ServiceCards /> */}
 
           {/* project cards */}
           <section id="projects" className="mt-24 grid scroll-mt-24 gap-6 md:grid-cols-3">
