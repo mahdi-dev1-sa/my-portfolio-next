@@ -2,8 +2,8 @@
 import { useEffect, useRef, useState } from "react";
 import { SERVICES } from "../services";
 
-// "Magic happens behind the doors": a hallway with one arched door per specialization.
-// Put the mouse on a door: it opens a little, inward, and what I do shows right beside it.
+// "Magic happens behind the doors": a hallway with one arched door per specialization, in two rows.
+// Put the mouse on a door: it opens a little, inward, the other doors blur, and what I do shows right beside it.
 // Click a door to go out to my projects. (On a phone: tap once to look, tap again to go.)
 const COLORS = ["#1f4fd8", "#6d4bd6", "#8fa9c4", "#d0605a", "#1f9d8f", "#d99a2b", "#c2559a"];
 
@@ -43,7 +43,7 @@ function DoorArt({ index, title, open }: { index: number; title: string; open: b
 
         {/* brass name plate */}
         <span
-          className="absolute left-1/2 top-[21%] w-[86%] -translate-x-1/2 rounded-[3px] border border-[#8a6a2b] px-1 py-1 text-center font-mono text-[clamp(8px,0.9vw,13px)] font-bold uppercase leading-tight tracking-[0.06em] text-[#2b1d08] shadow-[0_2px_4px_rgba(0,0,0,0.55),inset_0_1px_0_rgba(255,255,255,0.7)]"
+          className="absolute left-1/2 top-[21%] w-[86%] -translate-x-1/2 rounded-[3px] border border-[#8a6a2b] px-1 py-1 text-center font-mono text-[clamp(7px,1.9vw,13px)] font-bold uppercase leading-tight tracking-[0.06em] text-[#2b1d08] shadow-[0_2px_4px_rgba(0,0,0,0.55),inset_0_1px_0_rgba(255,255,255,0.7)]"
           style={{
             background: "linear-gradient(180deg, #f7ebc4, #e2c986 55%, #c9a95f)",
             textShadow: "0 1px 0 rgba(255,255,255,0.65)",
@@ -80,18 +80,18 @@ function goToProjects() {
   document.getElementById("projects")?.scrollIntoView({ block: "start" });
 }
 
-// what I do with one specialization
+// what I do with one specialization: big, high-contrast, easy to read
 function Info({ s }: { s: Service }) {
   return (
     <div>
-      <h3 className="text-2xl font-semibold leading-tight tracking-tight sm:text-3xl">{s.title.replace(" (AI)", "")}</h3>
-      <p className="mt-2 font-mono text-[11px] font-bold uppercase tracking-[0.14em] text-accent-fg">{s.tagline}</p>
-      <ul className="mt-4 grid gap-2.5">
+      <h3 className="text-2xl font-bold leading-tight tracking-tight sm:text-[1.75rem]">{s.title.replace(" (AI)", "")}</h3>
+      <p className="mt-2 text-sm font-semibold leading-snug text-accent-fg sm:text-base">{s.tagline}</p>
+      <ul className="mt-4 grid gap-3">
         {s.points.map((p) => (
-          <li key={p} className="flex items-center gap-3 text-sm font-medium sm:text-base">
+          <li key={p} className="flex items-start gap-3 text-base font-medium leading-snug text-foreground sm:text-[1.05rem]">
             <span
               aria-hidden="true"
-              className="grid size-5 shrink-0 place-items-center rounded-full bg-foreground text-[11px] text-background"
+              className="mt-0.5 grid size-5 shrink-0 place-items-center rounded-full bg-accent text-xs font-bold text-accent-ink"
             >
               ✓
             </span>
@@ -102,6 +102,9 @@ function Info({ s }: { s: Service }) {
     </div>
   );
 }
+
+// two rows: 4 doors, then 3
+const ROWS = [SERVICES.slice(0, 4), SERVICES.slice(4)];
 
 export default function ServiceCards() {
   const box = useRef<HTMLDivElement>(null);
@@ -172,51 +175,67 @@ export default function ServiceCards() {
         Magic happens behind the doors
       </h2>
 
-      {/* the hallway: the doors never move, only the words appear */}
-      <div className="relative mt-12 flex min-h-[22rem] items-end border-b border-foreground/20">
+      {/* the hallway: two rows of doors. The doors never move, only the words appear */}
+      <div ref={box} className="relative mt-12 grid gap-y-14">
         {SERVICES.map((s) => (
           <span key={s.id} id={s.id} aria-hidden="true" className="absolute left-0 top-0 scroll-mt-24" />
         ))}
 
-        <div ref={box} className="flex w-full snap-x gap-4 overflow-x-auto px-2 pt-4 sm:justify-between sm:overflow-visible">
-          {SERVICES.map((s, i) => (
-            <div
-              key={s.id}
-              data-door
-              style={{ transitionDelay: `${i * 90}ms` }}
-              className={`relative w-28 shrink-0 translate-y-10 snap-center opacity-0 transition-[opacity,translate] duration-[800ms] ease-[cubic-bezier(.2,.8,.2,1)] data-[in=1]:translate-y-0 data-[in=1]:opacity-100 motion-reduce:transition-none sm:w-[calc((100%-6rem)/7)] sm:max-w-[9.5rem] sm:shrink ${
-                active === i ? "z-30" : "z-0"
-              }`}
-            >
-              <button
-                type="button"
-                aria-label={`${s.title}: ${s.text}. Click to see my projects.`}
-                onClick={() => (active === i ? goToProjects() : enter(i))}
-                onPointerEnter={(e) => e.pointerType === "mouse" && enter(i)}
-                onPointerLeave={(e) => e.pointerType === "mouse" && leave()}
-                onFocus={() => enter(i)}
-                onBlur={leave}
-                className="block w-full cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent"
-              >
-                <DoorArt index={i} title={s.title} open={active === i} />
-              </button>
+        {ROWS.map((row, r) => {
+          const base = r * 4;
+          return (
+            <div key={r} className="flex items-end justify-center gap-3 border-b border-foreground/20 px-2 sm:gap-8">
+              {row.map((s, j) => {
+                const i = base + j;
+                const wordsOnRight = j < Math.ceil(row.length / 2);
+                return (
+                  <div
+                    key={s.id}
+                    data-door
+                    style={{ transitionDelay: `${i * 90}ms` }}
+                    className={`relative w-[calc(25%-0.75rem)] max-w-[11rem] translate-y-10 opacity-0 transition-[opacity,translate] duration-[800ms] ease-[cubic-bezier(.2,.8,.2,1)] data-[in=1]:translate-y-0 data-[in=1]:opacity-100 motion-reduce:transition-none ${
+                      active === i ? "z-30" : "z-0"
+                    }`}
+                  >
+                    {/* when one door is picked, the others blur and fade back */}
+                    <div
+                      className={`transition-[filter,opacity,scale] duration-300 motion-reduce:transition-none ${
+                        active !== null && active !== i ? "scale-[0.97] opacity-45 blur-[3px]" : ""
+                      }`}
+                    >
+                      <button
+                        type="button"
+                        aria-label={`${s.title}: ${s.text}. Click to see my projects.`}
+                        onClick={() => (active === i ? goToProjects() : enter(i))}
+                        onPointerEnter={(e) => e.pointerType === "mouse" && enter(i)}
+                        onPointerLeave={(e) => e.pointerType === "mouse" && leave()}
+                        onFocus={() => enter(i)}
+                        onBlur={leave}
+                        className="block w-full cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent"
+                      >
+                        <DoorArt index={i} title={s.title} open={active === i} />
+                      </button>
+                    </div>
 
-              {/* the words, right beside the door (left half of the hallway: on its right; right half: on its left) */}
-              {active === i && (
-                <div
-                  className={`pointer-events-none absolute top-0 hidden w-72 rounded-2xl border border-foreground/15 bg-background/90 p-5 shadow-[0_20px_50px_-20px_rgba(0,0,0,0.8)] backdrop-blur-md transition-[opacity,translate] duration-300 ease-[cubic-bezier(.2,.8,.2,1)] starting:opacity-0 motion-reduce:transition-none sm:block ${
-                    i < 4
-                      ? "left-[calc(100%+0.75rem)] starting:-translate-x-3"
-                      : "right-[calc(100%+0.75rem)] starting:translate-x-3"
-                  }`}
-                >
-                  <Info s={s} />
-                  <p className="mt-4 font-mono text-[11px] uppercase tracking-widest text-accent-fg">Click to see my projects →</p>
-                </div>
-              )}
+                    {/* the words, right beside the door */}
+                    {active === i && (
+                      <div
+                        className={`pointer-events-none absolute top-0 hidden w-80 rounded-2xl border border-foreground/20 bg-background/95 p-6 shadow-[0_20px_50px_-20px_rgba(0,0,0,0.9)] backdrop-blur-md transition-[opacity,translate] duration-300 ease-[cubic-bezier(.2,.8,.2,1)] starting:opacity-0 motion-reduce:transition-none sm:block ${
+                          wordsOnRight
+                            ? "left-[calc(100%+0.75rem)] starting:-translate-x-3"
+                            : "right-[calc(100%+0.75rem)] starting:translate-x-3"
+                        }`}
+                      >
+                        <Info s={s} />
+                        <p className="mt-5 text-sm font-semibold text-accent-fg">Click to see my projects →</p>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
             </div>
-          ))}
-        </div>
+          );
+        })}
       </div>
 
       {/* on a phone there is no room beside the door, so the words show under the hallway */}
@@ -227,7 +246,7 @@ export default function ServiceCards() {
             <button
               type="button"
               onClick={goToProjects}
-              className="mt-4 rounded-full border border-foreground/15 px-4 py-1.5 font-mono text-[11px] uppercase tracking-widest text-accent-fg"
+              className="mt-4 rounded-full border border-foreground/15 px-4 py-1.5 text-sm font-semibold text-accent-fg"
             >
               See my projects →
             </button>
