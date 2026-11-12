@@ -1,5 +1,6 @@
-:HL["/my-portfolio-next/_next/static/chunks/1b8ky0wdbmcsk.css","style"]
-:HL["/my-portfolio-next/_next/static/chunks/1nhi23-gwe4d1.css","style"]
+:HL["/my-portfolio-next/_next/static/chunks/1p9driq61lv52.css","style"]
+:HL["/my-portfolio-next/_next/static/media/953470e17626ea64-s.p.43p9crwv-vof6.woff2","font",{"crossOrigin":"","type":"font/woff2"}]
+:HL["/my-portfolio-next/_next/static/chunks/1na7jhht8lbbp.css","style"]
 2:[["children",{"s":"__PAGE__","h":160}]]
 1:[["children",{"s":{"n":"service","t":"d","k":"video-editing","s":["components"]},"h":65632,"c":"$Q2"}]]
-0:{"b":"ptXZ4hDKTKFO11wqtinG3","t":{"t":{"s":"","h":131152,"c":"$Q1"}}}
+0:{"b":"zvylMi58K7HaYkY7l21Z8","t":{"t":{"s":"","h":131152,"c":"$Q1"}}}
