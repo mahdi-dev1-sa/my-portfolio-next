@@ -1,14 +1,19 @@
 "use client";
 import { useEffect, useState } from "react";
+import { SERVICES } from "../services";
 
-// Capsules use the brand colors: black, deep purple, purple, and the random accent.
-const CAPSULES = [
-  { label: "Mahdi Dev", bg: "#17171d", fg: "#c9c9d3" },
-  { label: "Web development", bg: "#2a2160", fg: "#d8d2ff" },
-  { label: "App development", bg: "#4b34b8", fg: "#ece8ff" },
-  { label: "Video design", bg: "#7c5cff", fg: "#0a0a0c" },
-  { label: "Game development", bg: "var(--accent)", fg: "#0a0a0c" },
+// One capsule per specialization (the same names as the doors and the menu).
+// The colors are a gradient: black -> deep purple -> purple -> the site's random accent color.
+const SHADES = [
+  { bg: "#17171d", fg: "#c9c9d3" },
+  { bg: "#241d55", fg: "#d8d2ff" },
+  { bg: "#34288a", fg: "#e6e1ff" },
+  { bg: "var(--primary)", fg: "#0a0a0c" },
+  { bg: "color-mix(in srgb, var(--primary) 60%, var(--accent))", fg: "#0a0a0c" },
+  { bg: "color-mix(in srgb, var(--primary) 25%, var(--accent))", fg: "#0a0a0c" },
+  { bg: "var(--accent)", fg: "#0a0a0c" },
 ];
+const CAPSULES = SERVICES.map((s, i) => ({ label: s.title, ...SHADES[i % SHADES.length] }));
 
 const DURATION = 2600; // counter length in ms
 const easeInOut = (t: number) =>
@@ -69,7 +74,7 @@ export default function Preloader() {
       {/* capsule stack */}
       <div className="mx-auto w-full max-w-sm">
         {CAPSULES.map((c, i) => {
-          const visible = count >= 8 + i * 18;
+          const visible = count >= 8 + i * 13;
           const fromLeft = i % 2 === 0;
           let transform = visible ? "translateY(0)" : "translateY(60px)";
           if (exiting) {
@@ -78,7 +83,7 @@ export default function Preloader() {
           return (
             <div
               key={c.label}
-              className="relative -mt-4 flex h-24 items-start rounded-full px-8 pt-4 text-sm first:mt-0"
+              className="relative -mt-5 flex h-[4.5rem] items-start rounded-full px-8 pt-3.5 text-sm font-medium first:mt-0"
               style={{
                 background: c.bg,
                 color: c.fg,
