@@ -12,7 +12,7 @@ import "../doors.css";
 const COLORS = ["#1f4fd8", "#6d4bd6", "#8fa9c4", "#d0605a", "#1f9d8f", "#d99a2b", "#c2559a"];
 
 // The picture of one door. It fills the width of whatever holds it.
-function DoorArt({ index, title, open, angle = 28 }: { index: number; title: string; open: boolean; angle?: number }) {
+function DoorArt({ index, title, open, angle = 28, dive = false }: { index: number; title: string; open: boolean; angle?: number; dive?: boolean }) {
   const color = COLORS[index % COLORS.length];
   return (
     <span aria-hidden="true" className="relative block aspect-[1/2.05] w-full [perspective:1100px]">
@@ -27,6 +27,11 @@ function DoorArt({ index, title, open, angle = 28 }: { index: number; title: str
         <span className="font-mono text-[11px] font-semibold tracking-[0.2em] text-[#4a2a08]">
           {String(index + 1).padStart(2, "0")}
         </span>
+        {/* walking in: the room behind the door is dark */}
+        <span
+          className="absolute inset-0 bg-[#070912]"
+          style={{ opacity: dive ? 1 : 0, transition: "opacity 600ms ease-in 100ms" }}
+        />
       </span>
 
       {/* the door itself: opens a little, inward, around its left edge */}
@@ -80,36 +85,18 @@ function DoorArt({ index, title, open, angle = 28 }: { index: number; title: str
 
 type Service = (typeof SERVICES)[number];
 
-type Zoom = { i: number; top: number; left: number; width: number; height: number; go: boolean };
+// Walking into a door, like a camera: the whole hallway rushes toward the middle of the open doorway
+// (the heading and the other doors fly past), the door swings aside, it gets dark, then the page opens.
+type Zoom = { i: number; ox: number; oy: number; dx: number; dy: number; k: number; go: boolean };
 
-// Walking into the door: a copy of the door sits exactly on top of the real one, swings open wider,
-// and the camera dives into its middle (it grows around its own centre while that centre slides to the middle of the screen).
-function ZoomOverlay({ z }: { z: Zoom }) {
-  const vw = window.innerWidth;
-  const vh = window.innerHeight;
-  const dx = vw / 2 - (z.left + z.width / 2);
-  const dy = vh / 2 - (z.top + z.height / 2);
-  const k = Math.max(vw / z.width, vh / z.height) * 2.2;
+// the screen goes dark at the end, in the page colour, so the new page opens from it
+function ZoomFade({ go }: { go: boolean }) {
   return createPortal(
     <div
       aria-hidden="true"
-      className="pointer-events-none fixed z-[200] ease-[cubic-bezier(.55,0,.85,.35)]"
-      style={{
-        top: z.top,
-        left: z.left,
-        width: z.width,
-        transformOrigin: "50% 50%",
-        transform: z.go ? `translate(${dx}px, ${dy}px) scale(${k})` : "none",
-        transition: "transform 1100ms cubic-bezier(.55,0,.85,.35)",
-      }}
-    >
-      <DoorArt index={z.i} title={SERVICES[z.i].title} open angle={z.go ? 80 : 28} />
-      {/* deeper inside, it gets dark and settles into the page colour */}
-      <div
-        className="absolute inset-0 -m-[400%] bg-background"
-        style={{ opacity: z.go ? 1 : 0, transition: "opacity 450ms ease-in 650ms" }}
-      />
-    </div>,
+      className="pointer-events-none fixed inset-0 z-[200] bg-background"
+      style={{ opacity: go ? 1 : 0, transition: "opacity 450ms ease-in 650ms" }}
+    />,
     document.body
   );
 }
@@ -147,21 +134,37 @@ export default function ServiceCards() {
   const current = active === null ? null : SERVICES[active];
   const router = useRouter();
   const doorEls = useRef<(HTMLElement | null)[]>([]);
+  const sectionEl = useRef<HTMLElement>(null);
+  const wasActive = useRef(false); // was this door already open when the finger / mouse went down?
   const [zoom, setZoom] = useState<Zoom | null>(null);
 
-  // walk through a door: zoom into it, then open that specialization's page
+  // walk through a door: the camera dives into it, then that specialization's page opens
   const openDoor = (i: number) => {
     if (zoom) return;
     const href = `/${SERVICES[i].id}/`;
     const el = doorEls.current[i];
-    if (!el || window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    const sec = sectionEl.current;
+    if (!el || !sec || window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
       router.push(href);
       return;
     }
     const r = el.getBoundingClientRect();
-    setZoom({ i, top: r.top, left: r.left, width: r.width, height: r.height, go: false });
+    const sr = sec.getBoundingClientRect();
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+    const cx = r.left + r.width / 2;
+    const cy = r.top + r.height * 0.5; // the middle of the doorway
+    setZoom({
+      i,
+      ox: cx - sr.left,
+      oy: cy - sr.top,
+      dx: vw / 2 - cx,
+      dy: vh / 2 - cy,
+      k: Math.max(vw / r.width, vh / r.height) * 2.4,
+      go: false,
+    });
     requestAnimationFrame(() => requestAnimationFrame(() => setZoom((z) => (z ? { ...z, go: true } : z))));
-    setTimeout(() => router.push(href), 1120);
+    setTimeout(() => router.push(href), 1150);
   };
 
   const enter = (i: number) => {
@@ -218,7 +221,24 @@ export default function ServiceCards() {
   }, [active]);
 
   return (
-    <section aria-labelledby="specializations" className="mt-24">
+    <section
+      ref={sectionEl}
+      aria-labelledby="specializations"
+      className="mt-24"
+      style={
+        zoom
+          ? {
+              position: "relative",
+              zIndex: 20,
+              willChange: "transform, filter",
+              transformOrigin: `${zoom.ox}px ${zoom.oy}px`,
+              transform: zoom.go ? `translate(${zoom.dx}px, ${zoom.dy}px) scale(${zoom.k})` : "none",
+              filter: zoom.go ? "blur(8px)" : "blur(0px)",
+              transition: "transform 1100ms cubic-bezier(.55,0,.85,.35), filter 600ms ease-in 450ms",
+            }
+          : undefined
+      }
+    >
       <p className="text-center text-xs font-semibold uppercase tracking-widest text-accent-fg">My specializations</p>
       <h2
         id="specializations"
@@ -261,19 +281,28 @@ export default function ServiceCards() {
                           doorEls.current[i] = el;
                         }}
                         aria-label={`${s.title}: ${s.text}. Click to open this door.`}
-                        onClick={() => (active === i ? openDoor(i) : enter(i))}
+                        onPointerDown={() => {
+                          wasActive.current = active === i;
+                        }}
+                        onClick={(e) => (e.detail === 0 || wasActive.current ? openDoor(i) : enter(i))}
                         onPointerEnter={(e) => e.pointerType === "mouse" && enter(i)}
                         onPointerLeave={(e) => e.pointerType === "mouse" && leave()}
                         onFocus={() => enter(i)}
                         onBlur={leave}
                         className="block w-full cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent"
                       >
-                        <DoorArt index={i} title={s.title} open={active === i} />
+                        <DoorArt
+                          index={i}
+                          title={s.title}
+                          open={active === i}
+                          angle={zoom?.i === i && zoom.go ? 84 : 28}
+                          dive={zoom?.i === i && zoom.go}
+                        />
                       </button>
                     </div>
 
                     {/* the words, right beside the door */}
-                    {active === i && (
+                    {active === i && !zoom && (
                       <div
                         className={`pointer-events-none absolute top-0 hidden w-80 rounded-2xl border border-foreground/20 bg-background/95 p-6 shadow-[0_20px_50px_-20px_rgba(0,0,0,0.9)] backdrop-blur-md transition-[opacity,translate] duration-300 ease-[cubic-bezier(.2,.8,.2,1)] starting:opacity-0 motion-reduce:transition-none sm:block ${
                           wordsOnRight
@@ -313,7 +342,7 @@ export default function ServiceCards() {
       <p className="mt-6 hidden text-center text-sm text-muted sm:block">
         Put the mouse on a door to see what is behind it. Click it to walk in.
       </p>
-      {zoom && <ZoomOverlay z={zoom} />}
+      {zoom && <ZoomFade go={zoom.go} />}
     </section>
   );
 }
