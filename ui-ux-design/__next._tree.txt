@@ -3,4 +3,4 @@
 :HL["/my-portfolio-next/_next/static/chunks/1na7jhht8lbbp.css","style"]
 2:[["children",{"s":"__PAGE__","h":160}]]
 1:[["children",{"s":{"n":"service","t":"d","k":"ui-ux-design","s":["components"]},"h":65632,"c":"$Q2"}]]
-0:{"b":"hMNyFtBhMf2iXXfGIOJUD","t":{"t":{"s":"","h":131152,"c":"$Q1"}}}
+0:{"b":"AE0j0euupGJEHvmDqhj3I","t":{"t":{"s":"","h":131152,"c":"$Q1"}}}
