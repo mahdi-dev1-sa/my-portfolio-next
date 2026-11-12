@@ -1,10 +1,14 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
+import { useRouter } from "next/navigation";
 import { SERVICES } from "../services";
+import "../doors.css";
 
 // "Magic happens behind the doors": a hallway with one arched door per specialization, in two rows.
 // Put the mouse on a door: it opens a little, inward, the other doors blur, and what I do shows right beside it.
-// Click a door to go out to my projects. (On a phone: tap once to look, tap again to go.)
+// Click a door to walk through it: the camera zooms into the door and opens that specialization's page.
+// (On a phone: tap once to look, tap again to go in.)
 const COLORS = ["#1f4fd8", "#6d4bd6", "#8fa9c4", "#d0605a", "#1f9d8f", "#d99a2b", "#c2559a"];
 
 // The picture of one door. It fills the width of whatever holds it.
@@ -76,8 +80,36 @@ function DoorArt({ index, title, open }: { index: number; title: string; open: b
 
 type Service = (typeof SERVICES)[number];
 
-function goToProjects() {
-  document.getElementById("projects")?.scrollIntoView({ block: "start" });
+type Zoom = { i: number; top: number; left: number; width: number; height: number; go: boolean };
+
+// the picture that grows from the door until it fills the whole screen
+function ZoomOverlay({ z }: { z: Zoom }) {
+  const color = COLORS[z.i % COLORS.length];
+  const box = z.go
+    ? { top: 0, left: 0, width: "100vw", height: "100vh", borderRadius: 0 }
+    : { top: z.top, left: z.left, width: z.width, height: z.height, borderRadius: "999px 999px 0 0" };
+  return createPortal(
+    <div
+      aria-hidden="true"
+      className="pointer-events-none fixed z-[200] overflow-hidden bg-background transition-[top,left,width,height,border-radius] duration-[850ms] ease-[cubic-bezier(.65,0,.25,1)]"
+      style={box}
+    >
+      {/* the door colour, fading as we get close */}
+      <div
+        className="absolute inset-0 transition-opacity duration-500"
+        style={{ background: `linear-gradient(180deg, ${color}, color-mix(in srgb, ${color} 70%, #000))`, opacity: z.go ? 0 : 1 }}
+      />
+      {/* the warm light behind the door, then it settles into the page colour */}
+      <div
+        className="absolute inset-0 opacity-0"
+        style={{
+          background: "radial-gradient(70% 60% at 50% 100%, #fff1bd 0%, #e8b45a 40%, transparent 100%)",
+          animation: z.go ? "door-glow 850ms ease-in-out forwards" : undefined,
+        }}
+      />
+    </div>,
+    document.body
+  );
 }
 
 // what I do with one specialization: big, high-contrast, easy to read
@@ -111,6 +143,24 @@ export default function ServiceCards() {
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [active, setActive] = useState<number | null>(null);
   const current = active === null ? null : SERVICES[active];
+  const router = useRouter();
+  const doorEls = useRef<(HTMLElement | null)[]>([]);
+  const [zoom, setZoom] = useState<Zoom | null>(null);
+
+  // walk through a door: zoom into it, then open that specialization's page
+  const openDoor = (i: number) => {
+    if (zoom) return;
+    const href = `/${SERVICES[i].id}/`;
+    const el = doorEls.current[i];
+    if (!el || window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      router.push(href);
+      return;
+    }
+    const r = el.getBoundingClientRect();
+    setZoom({ i, top: r.top, left: r.left, width: r.width, height: r.height, go: false });
+    requestAnimationFrame(() => requestAnimationFrame(() => setZoom((z) => (z ? { ...z, go: true } : z))));
+    setTimeout(() => router.push(href), 880);
+  };
 
   const enter = (i: number) => {
     if (timer.current) clearTimeout(timer.current);
@@ -205,8 +255,11 @@ export default function ServiceCards() {
                     >
                       <button
                         type="button"
-                        aria-label={`${s.title}: ${s.text}. Click to see my projects.`}
-                        onClick={() => (active === i ? goToProjects() : enter(i))}
+                        ref={(el) => {
+                          doorEls.current[i] = el;
+                        }}
+                        aria-label={`${s.title}: ${s.text}. Click to open this door.`}
+                        onClick={() => (active === i ? openDoor(i) : enter(i))}
                         onPointerEnter={(e) => e.pointerType === "mouse" && enter(i)}
                         onPointerLeave={(e) => e.pointerType === "mouse" && leave()}
                         onFocus={() => enter(i)}
@@ -227,7 +280,7 @@ export default function ServiceCards() {
                         }`}
                       >
                         <Info s={s} />
-                        <p className="mt-5 text-sm font-semibold text-accent-fg">Click to see my projects →</p>
+                        <p className="mt-5 text-sm font-semibold text-accent-fg">Click to open this door →</p>
                       </div>
                     )}
                   </div>
@@ -245,10 +298,10 @@ export default function ServiceCards() {
             <Info s={current} />
             <button
               type="button"
-              onClick={goToProjects}
+              onClick={() => openDoor(SERVICES.indexOf(current))}
               className="mt-4 rounded-full border border-foreground/15 px-4 py-1.5 text-sm font-semibold text-accent-fg"
             >
-              See my projects →
+              Open this door →
             </button>
           </div>
         ) : (
@@ -256,8 +309,9 @@ export default function ServiceCards() {
         )}
       </div>
       <p className="mt-6 hidden text-center text-sm text-muted sm:block">
-        Put the mouse on a door to see what is behind it. Click it to see my projects.
+        Put the mouse on a door to see what is behind it. Click it to walk in.
       </p>
+      {zoom && <ZoomOverlay z={zoom} />}
     </section>
   );
 }
