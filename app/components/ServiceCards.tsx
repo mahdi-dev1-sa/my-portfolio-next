@@ -40,6 +40,7 @@ function DoorArt({ index, title, open, angle = 28, dive = false }: { index: numb
         style={{
           background: `linear-gradient(180deg, ${color}, color-mix(in srgb, ${color} 70%, #000))`,
           transform: open ? `rotateY(${angle}deg)` : "rotateY(0deg)",
+          transitionDelay: open ? "180ms" : "0ms",
         }}
       >
         {/* wood grain */}
@@ -73,7 +74,14 @@ function DoorArt({ index, title, open, angle = 28, dive = false }: { index: numb
           />
           <span
             className="absolute right-[12%] top-[17%] aspect-[8/1] w-[92%] rounded-full"
-            style={{ background: "linear-gradient(180deg, #fff3c8, #c4a24f 45%, #6d5420)", boxShadow: "0 3px 5px rgba(0,0,0,0.55)" }}
+            style={{
+              background: "linear-gradient(180deg, #fff3c8, #c4a24f 45%, #6d5420)",
+              boxShadow: "0 3px 5px rgba(0,0,0,0.55)",
+              // the lever turns down first, then the door swings open
+              transformOrigin: "92% 50%",
+              transform: open ? "rotate(-26deg)" : "rotate(0deg)",
+              transition: `transform 220ms ease-out ${open ? "0ms" : "500ms"}`,
+            }}
           />
           <span className="absolute bottom-[14%] right-[13%] aspect-square w-[14%] rounded-full bg-[#1d1608]" />
           <span className="absolute bottom-[3%] right-[18.5%] h-[10%] w-[3%] rounded-full bg-[#1d1608]" />
