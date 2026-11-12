@@ -1,42 +1,12 @@
-import "../doors.css";
+// A small bridge between the nav and the doors section (DoorRush).
+// The nav asks for a door by its id; DoorRush answers by playing the whole scene.
+export const DOOR_EVENT = "door:enter";
 
-// How long the door scene plays before the new page opens (matches the timeline in doors.css)
-export const DOOR_MS = 2900;
+export type DoorRequest = { id: string; handled: boolean };
 
-// "Magic happens...": two doors, the left one swings open, and we walk through it.
-// It sits on top of the page while a specialization page is being opened.
-export default function DoorTransition() {
-  return (
-    <div className="door-scene" aria-hidden="true">
-      <div className="door-sky" />
-      <p className="door-text">
-        <span>Magic happens…</span>
-      </p>
-
-      <div className="door-stage">
-        {/* the door that opens */}
-        <div className="door">
-          <div className="door-frame">
-            <div className="door-room" />
-            <div className="door-leaf door-leaf-left">
-              <i className="door-panel" />
-              <i className="door-knob" />
-            </div>
-          </div>
-        </div>
-        {/* the door that stays closed */}
-        <div className="door">
-          <div className="door-frame">
-            <div className="door-leaf">
-              <i className="door-panel" />
-              <i className="door-knob door-knob-left" />
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div className="door-light" />
-      <div className="door-cover" />
-    </div>
-  );
+// Returns true when the doors section took the request (the nav must then NOT open the page itself).
+export function requestDoor(id: string): boolean {
+  const detail: DoorRequest = { id, handled: false };
+  window.dispatchEvent(new CustomEvent<DoorRequest>(DOOR_EVENT, { detail }));
+  return detail.handled;
 }
