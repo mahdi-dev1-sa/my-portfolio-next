@@ -1,26 +1,29 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 
-// Placeholder anchors: replace each href later when the sections or pages exist.
-const HOME = { label: "Home", href: "#home" };
+// Each specialization has its own page (/web-development/ ...). The rest scroll to a section on the home page.
+const HOME = { label: "Home", href: "/#home" };
 const SERVICES = [
-  { label: "Web Development", href: "#web-development" },
-  { label: "App Development", href: "#app-development" },
-  { label: "Video Editing", href: "#video-editing" },
-  { label: "Game Development", href: "#game-development" },
-  { label: "Artificial Intelligence (AI)", href: "#artificial-intelligence" },
-  { label: "UI/UX Design", href: "#ui-ux-design" },
-  { label: "Graphic Design", href: "#graphic-design" },
+  { label: "Web Development", href: "/web-development/" },
+  { label: "App Development", href: "/app-development/" },
+  { label: "Video Editing", href: "/video-editing/" },
+  { label: "Game Development", href: "/game-development/" },
+  { label: "Artificial Intelligence (AI)", href: "/artificial-intelligence/" },
+  { label: "UI/UX Design", href: "/ui-ux-design/" },
+  { label: "Graphic Design", href: "/graphic-design/" },
 ];
 const MORE = [
-  { label: "My story", href: "#my-story" },
-  { label: "Contact", href: "#contact" },
+  { label: "My story", href: "/#my-story" },
+  { label: "Contact", href: "/#contact" },
 ];
 
 const linkBase = "transition-colors hover:text-accent-fg";
 
 export default function Nav() {
   const [menuOpen, setMenuOpen] = useState(false); // small screens: the whole menu
+  const path = usePathname();
   const ref = useRef<HTMLElement>(null);
 
   // close with Escape, or by clicking anywhere outside the nav
@@ -44,15 +47,19 @@ export default function Nav() {
       {/* ---------- wide screens: every link in one row ---------- */}
       <ul className="hidden flex-wrap items-center gap-x-3.5 gap-y-2 text-[13px] nav:flex">
         <li>
-          <a href={HOME.href} className={`text-foreground ${linkBase}`}>
+          <Link href={HOME.href} className={`text-foreground ${linkBase}`}>
             {HOME.label}
-          </a>
+          </Link>
         </li>
         {[...SERVICES, ...MORE].map((l) => (
           <li key={l.label}>
-            <a href={l.href} className={`text-muted ${linkBase}`}>
+            <Link
+              href={l.href}
+              aria-current={path === l.href ? "page" : undefined}
+              className={`${path === l.href ? "text-foreground underline underline-offset-4" : "text-muted"} ${linkBase}`}
+            >
               {l.label}
-            </a>
+            </Link>
           </li>
         ))}
       </ul>
@@ -92,38 +99,38 @@ export default function Nav() {
             className="absolute left-0 top-full z-30 mt-2 max-h-[70vh] w-64 overflow-y-auto rounded-2xl border border-foreground/15 bg-surface/95 p-2 text-sm shadow-xl backdrop-blur"
           >
             <li>
-              <a
+              <Link
                 href={HOME.href}
                 onClick={() => setMenuOpen(false)}
                 className="block rounded-xl px-3 py-2 text-foreground transition-colors hover:bg-foreground/5 hover:text-accent-fg"
               >
                 {HOME.label}
-              </a>
+              </Link>
             </li>
             <li className="px-3 pb-1 pt-3 text-[11px] uppercase tracking-widest text-muted/70">
               Services
             </li>
             {SERVICES.map((l) => (
               <li key={l.label}>
-                <a
+                <Link
                   href={l.href}
                   onClick={() => setMenuOpen(false)}
                   className="block rounded-xl px-3 py-2 text-muted transition-colors hover:bg-foreground/5 hover:text-accent-fg"
                 >
                   {l.label}
-                </a>
+                </Link>
               </li>
             ))}
             <li className="mx-3 my-2 h-px bg-foreground/10" aria-hidden="true" />
             {MORE.map((l) => (
               <li key={l.label}>
-                <a
+                <Link
                   href={l.href}
                   onClick={() => setMenuOpen(false)}
                   className="block rounded-xl px-3 py-2 text-muted transition-colors hover:bg-foreground/5 hover:text-accent-fg"
                 >
                   {l.label}
-                </a>
+                </Link>
               </li>
             ))}
           </ul>
