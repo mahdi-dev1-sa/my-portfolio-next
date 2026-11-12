@@ -1,5 +1,5 @@
-:HL["/my-portfolio-next/_next/static/chunks/0x7sseuhng08g.css","style"]
+:HL["/my-portfolio-next/_next/static/chunks/1b8ky0wdbmcsk.css","style"]
 :HL["/my-portfolio-next/_next/static/chunks/1nhi23-gwe4d1.css","style"]
 2:[["children",{"s":"__PAGE__","h":160}]]
 1:[["children",{"s":{"n":"service","t":"d","k":"ui-ux-design","s":["components"]},"h":65632,"c":"$Q2"}]]
-0:{"b":"0i853Z6C0VF-6DAt4u2Gw","t":{"t":{"s":"","h":131152,"c":"$Q1"}}}
+0:{"b":"ptXZ4hDKTKFO11wqtinG3","t":{"t":{"s":"","h":131152,"c":"$Q1"}}}
