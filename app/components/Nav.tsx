@@ -1,7 +1,9 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import DoorTransition, { DOOR_MS } from "./DoorTransition";
 
 // Each specialization has its own page (/web-development/ ...). The rest scroll to a section on the home page.
 const HOME = { label: "Home", href: "/#home" };
@@ -23,8 +25,29 @@ const linkBase = "transition-colors hover:text-accent-fg";
 
 export default function Nav() {
   const [menuOpen, setMenuOpen] = useState(false); // small screens: the whole menu
+  const [doorFrom, setDoorFrom] = useState<string | null>(null); // the page we left through the door
   const path = usePathname();
+  const router = useRouter();
   const ref = useRef<HTMLElement>(null);
+  const timer = useRef<number | undefined>(undefined);
+
+  // the door scene plays until the new page is open
+  const door = doorFrom !== null && doorFrom === path;
+
+  useEffect(() => () => window.clearTimeout(timer.current), []);
+
+  // Clicking a specialization: play the door scene, then open its page.
+  // Ctrl/Cmd/Shift clicks, the page we are already on, and "reduce motion" skip it and just navigate.
+  const goThroughDoor = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
+    setMenuOpen(false);
+    if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+    if (path === href) return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    e.preventDefault();
+    if (door) return;
+    setDoorFrom(path);
+    timer.current = window.setTimeout(() => router.push(href), DOOR_MS);
+  };
 
   // close with Escape, or by clicking anywhere outside the nav
   useEffect(() => {
@@ -44,6 +67,9 @@ export default function Nav() {
 
   return (
     <nav ref={ref} aria-label="Main" className="relative z-30">
+      {/* the door scene covers the whole screen, so it is drawn straight into <body> */}
+      {door && createPortal(<DoorTransition />, document.body)}
+
       {/* ---------- wide screens: every link in one row ---------- */}
       <ul className="hidden flex-wrap items-center gap-x-3.5 gap-y-2 text-[13px] nav:flex">
         <li>
@@ -55,6 +81,7 @@ export default function Nav() {
           <li key={l.label}>
             <Link
               href={l.href}
+              onClick={SERVICES.includes(l) ? (e) => goThroughDoor(e, l.href) : undefined}
               aria-current={path === l.href ? "page" : undefined}
               className={`${path === l.href ? "text-foreground underline underline-offset-4" : "text-muted"} ${linkBase}`}
             >
@@ -114,7 +141,7 @@ export default function Nav() {
               <li key={l.label}>
                 <Link
                   href={l.href}
-                  onClick={() => setMenuOpen(false)}
+                  onClick={(e) => goThroughDoor(e, l.href)}
                   className="block rounded-xl px-3 py-2 text-muted transition-colors hover:bg-foreground/5 hover:text-accent-fg"
                 >
                   {l.label}
