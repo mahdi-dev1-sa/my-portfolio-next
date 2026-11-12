@@ -12,7 +12,7 @@ import "../doors.css";
 const COLORS = ["#1f4fd8", "#6d4bd6", "#8fa9c4", "#d0605a", "#1f9d8f", "#d99a2b", "#c2559a"];
 
 // The picture of one door. It fills the width of whatever holds it.
-function DoorArt({ index, title, open }: { index: number; title: string; open: boolean }) {
+function DoorArt({ index, title, open, angle = 28 }: { index: number; title: string; open: boolean; angle?: number }) {
   const color = COLORS[index % COLORS.length];
   return (
     <span aria-hidden="true" className="relative block aspect-[1/2.05] w-full [perspective:1100px]">
@@ -34,7 +34,7 @@ function DoorArt({ index, title, open }: { index: number; title: string; open: b
         className="absolute inset-[5%] origin-left overflow-hidden rounded-t-[999px] shadow-[inset_0_0_30px_rgba(0,0,0,0.35)] transition-transform duration-[750ms] ease-[cubic-bezier(.3,.8,.2,1)] [transform-style:preserve-3d]"
         style={{
           background: `linear-gradient(180deg, ${color}, color-mix(in srgb, ${color} 70%, #000))`,
-          transform: open ? "rotateY(28deg)" : "rotateY(0deg)",
+          transform: open ? `rotateY(${angle}deg)` : "rotateY(0deg)",
         }}
       >
         {/* wood grain */}
@@ -82,30 +82,32 @@ type Service = (typeof SERVICES)[number];
 
 type Zoom = { i: number; top: number; left: number; width: number; height: number; go: boolean };
 
-// the picture that grows from the door until it fills the whole screen
+// Walking into the door: a copy of the door sits exactly on top of the real one, swings open wider,
+// and the camera dives into its middle (it grows around its own centre while that centre slides to the middle of the screen).
 function ZoomOverlay({ z }: { z: Zoom }) {
-  const color = COLORS[z.i % COLORS.length];
-  const box = z.go
-    ? { top: 0, left: 0, width: "100vw", height: "100vh", borderRadius: 0 }
-    : { top: z.top, left: z.left, width: z.width, height: z.height, borderRadius: "999px 999px 0 0" };
+  const vw = window.innerWidth;
+  const vh = window.innerHeight;
+  const dx = vw / 2 - (z.left + z.width / 2);
+  const dy = vh / 2 - (z.top + z.height / 2);
+  const k = Math.max(vw / z.width, vh / z.height) * 2.2;
   return createPortal(
     <div
       aria-hidden="true"
-      className="pointer-events-none fixed z-[200] overflow-hidden bg-background transition-[top,left,width,height,border-radius] duration-[850ms] ease-[cubic-bezier(.65,0,.25,1)]"
-      style={box}
+      className="pointer-events-none fixed z-[200] ease-[cubic-bezier(.55,0,.85,.35)]"
+      style={{
+        top: z.top,
+        left: z.left,
+        width: z.width,
+        transformOrigin: "50% 50%",
+        transform: z.go ? `translate(${dx}px, ${dy}px) scale(${k})` : "none",
+        transition: "transform 1100ms cubic-bezier(.55,0,.85,.35)",
+      }}
     >
-      {/* the door colour, fading as we get close */}
+      <DoorArt index={z.i} title={SERVICES[z.i].title} open angle={z.go ? 80 : 28} />
+      {/* deeper inside, it gets dark and settles into the page colour */}
       <div
-        className="absolute inset-0 transition-opacity duration-500"
-        style={{ background: `linear-gradient(180deg, ${color}, color-mix(in srgb, ${color} 70%, #000))`, opacity: z.go ? 0 : 1 }}
-      />
-      {/* the warm light behind the door, then it settles into the page colour */}
-      <div
-        className="absolute inset-0 opacity-0"
-        style={{
-          background: "radial-gradient(70% 60% at 50% 100%, #fff1bd 0%, #e8b45a 40%, transparent 100%)",
-          animation: z.go ? "door-glow 850ms ease-in-out forwards" : undefined,
-        }}
+        className="absolute inset-0 -m-[400%] bg-background"
+        style={{ opacity: z.go ? 1 : 0, transition: "opacity 450ms ease-in 650ms" }}
       />
     </div>,
     document.body
@@ -159,7 +161,7 @@ export default function ServiceCards() {
     const r = el.getBoundingClientRect();
     setZoom({ i, top: r.top, left: r.left, width: r.width, height: r.height, go: false });
     requestAnimationFrame(() => requestAnimationFrame(() => setZoom((z) => (z ? { ...z, go: true } : z))));
-    setTimeout(() => router.push(href), 880);
+    setTimeout(() => router.push(href), 1120);
   };
 
   const enter = (i: number) => {
