@@ -1,0 +1,15 @@
+/* Walking through a door: the warm light flashes, then the screen settles into the page colour */
+@keyframes door-glow {
+  0% { opacity: 0; }
+  45% { opacity: 0.9; }
+  100% { opacity: 0; }
+}
+/* The new page opens from the page colour, as if we just stepped through */
+@keyframes door-open {
+  from { opacity: 1; }
+  to { opacity: 0; visibility: hidden; }
+}
+@keyframes door-rise {
+  from { opacity: 0; transform: scale(1.05); }
+  to { opacity: 1; transform: scale(1); }
+}
