@@ -9,7 +9,7 @@ const ParticleField = dynamic(() => import("./components/ParticleField"), { ssr:
 
 export default function Home() {
   return (
-    <main id="home" className="relative min-h-screen overflow-x-clip pb-20">
+    <main id="home" className="relative min-h-screen overflow-clip pb-20">
       <ParticleField />
 
       <div className="relative z-10">
