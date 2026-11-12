@@ -1,5 +1,5 @@
 "use client";
-import { useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import { Kaushan_Script } from "next/font/google";
 import LocalTime from "./LocalTime";
@@ -10,6 +10,68 @@ const GlassCarousel = dynamic(() => import("./GlassCarousel"), { ssr: false });
 
 // brush-script font for the name
 const brush = Kaushan_Script({ weight: "400", subsets: ["latin"], display: "swap" });
+
+// my specializations, as job titles
+const ROLES = ["Web Developer", "App Developer", "Video Editor", "Game Developer", "AI Specialist", "UI/UX Designer", "Graphic Designer"];
+
+// "I am a ...": a spiral-bound notepad whose page flips up and over to show the next specialization
+function RoleCard() {
+  const [i, setI] = useState(0);
+  const [flip, setFlip] = useState(false);
+
+  useEffect(() => {
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    let t2: ReturnType<typeof setTimeout> | undefined;
+    const t1 = setInterval(() => {
+      if (reduce) {
+        setI((v) => (v + 1) % ROLES.length);
+        return;
+      }
+      setFlip(true);
+      t2 = setTimeout(() => {
+        setI((v) => (v + 1) % ROLES.length);
+        setFlip(false);
+      }, 650);
+    }, 2800);
+    return () => {
+      clearInterval(t1);
+      if (t2) clearTimeout(t2);
+    };
+  }, []);
+
+  const next = ROLES[(i + 1) % ROLES.length];
+  const face =
+    "flex min-w-[16ch] items-center justify-center whitespace-nowrap rounded-xl bg-foreground px-5 py-2 text-center text-[clamp(1.15rem,3.2vw,2.1rem)] font-semibold leading-tight text-background";
+
+  return (
+    <div className="relative" style={{ perspective: "800px" }}>
+      <span className="sr-only">I am a {ROLES.join(", ")}</span>
+      {/* the metal rings */}
+      <div aria-hidden="true" className="pointer-events-none absolute inset-x-3 -top-2.5 z-10 flex justify-between">
+        {Array.from({ length: 9 }).map((_, k) => (
+          <span key={k} className="h-4 w-1.5 rounded-full border-2 border-foreground/70 bg-background" />
+        ))}
+      </div>
+      <div aria-hidden="true" className="relative">
+        {/* the page underneath: the next one */}
+        <div className={face}>{next}</div>
+        {/* the page on top: it flips up and over, hinged at its top edge */}
+        <div
+          className={`${face} absolute inset-0`}
+          style={{
+            transformOrigin: "top",
+            backfaceVisibility: "hidden",
+            transform: flip ? "rotateX(-100deg)" : "rotateX(0deg)",
+            transition: flip ? "transform 650ms cubic-bezier(.5,0,.75,0)" : "none",
+            boxShadow: "0 6px 18px rgba(0,0,0,0.35)",
+          }}
+        >
+          {ROLES[i]}
+        </div>
+      </div>
+    </div>
+  );
+}
 
 // The first thing a visitor sees: my name, then a ribbon of glass cards (my specializations) that spirals around them.
 // The tall box lets the page scroll while the stage stays pinned; scrolling moves the carousel.
@@ -49,6 +111,15 @@ export default function Hero() {
               <span className="hidden sm:inline">Available for work</span>
             </p>
           </div>
+        </div>
+
+        {/* "I am a [flipping page]": sits right under the name and fades out as you scroll */}
+        <div
+          style={{ opacity: "var(--intro, 1)", top: "calc(50% + clamp(3.5rem, 11vw, 9.5rem) * 0.95 + 1.1rem)" }}
+          className="absolute inset-x-0 z-20 flex items-center justify-center gap-3 px-6"
+        >
+          <span className="text-base text-muted sm:text-lg">I am a</span>
+          <RoleCard />
         </div>
 
         <GlassCarousel trackRef={track} />
