@@ -1,9 +1,8 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
-import { createPortal } from "react-dom";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
-import DoorTransition, { DOOR_MS } from "./DoorTransition";
+import { usePathname } from "next/navigation";
+import { requestDoor } from "./DoorTransition";
 
 // Each specialization has its own page (/web-development/ ...). The rest scroll to a section on the home page.
 const HOME = { label: "Home", href: "/#home" };
@@ -25,28 +24,16 @@ const linkBase = "transition-colors hover:text-accent-fg";
 
 export default function Nav() {
   const [menuOpen, setMenuOpen] = useState(false); // small screens: the whole menu
-  const [doorFrom, setDoorFrom] = useState<string | null>(null); // the page we left through the door
   const path = usePathname();
-  const router = useRouter();
   const ref = useRef<HTMLElement>(null);
-  const timer = useRef<number | undefined>(undefined);
 
-  // the door scene plays until the new page is open
-  const door = doorFrom !== null && doorFrom === path;
-
-  useEffect(() => () => window.clearTimeout(timer.current), []);
-
-  // Clicking a specialization: play the door scene, then open its page.
-  // Ctrl/Cmd/Shift clicks, the page we are already on, and "reduce motion" skip it and just navigate.
+  // On the home page, a specialization does not open its page straight away: the page rushes down to the doors,
+  // that door opens and we walk in (see DoorRush). Ctrl/Cmd/Shift clicks, and every other page, just navigate.
   const goThroughDoor = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
     setMenuOpen(false);
     if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
-    if (path === href) return;
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-    e.preventDefault();
-    if (door) return;
-    setDoorFrom(path);
-    timer.current = window.setTimeout(() => router.push(href), DOOR_MS);
+    if (path !== "/") return;
+    if (requestDoor(href.replace(/\//g, ""))) e.preventDefault();
   };
 
   // close with Escape, or by clicking anywhere outside the nav
@@ -67,9 +54,6 @@ export default function Nav() {
 
   return (
     <nav ref={ref} aria-label="Main" className="relative z-30">
-      {/* the door scene covers the whole screen, so it is drawn straight into <body> */}
-      {door && createPortal(<DoorTransition />, document.body)}
-
       {/* ---------- wide screens: every link in one row ---------- */}
       <ul className="hidden flex-wrap items-center gap-x-3.5 gap-y-2 text-[13px] nav:flex">
         <li>
