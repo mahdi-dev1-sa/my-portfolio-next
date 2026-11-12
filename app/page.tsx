@@ -16,31 +16,13 @@ export default function Home() {
         {/* first screen: name + 3D carousel of glass cards with my specializations */}
         <Hero />
 
-        <Story />
-
         <div className="mx-auto max-w-5xl px-6">
           {/* glass cards: my specializations */}
           <ServiceCards />
-
-          {/* project cards */}
-          <section id="projects" className="mt-24 grid scroll-mt-24 gap-6 md:grid-cols-3">
-            {["Expense Tracker", "Brick Breaker", "Dice"].map((name) => (
-              <article
-                key={name}
-                className="group rounded-2xl border border-primary/30 bg-surface p-6 transition hover:border-primary hover:shadow-[0_0_40px_-10px_var(--primary)]"
-              >
-                <span className="text-xs font-semibold uppercase tracking-widest text-accent-fg">
-                  iOS App
-                </span>
-                <h3 className="mt-3 text-xl font-semibold">{name}</h3>
-                <p className="mt-2 text-sm text-muted">Short project description here.</p>
-                <span className="mt-6 inline-block text-sm text-accent-fg transition group-hover:translate-x-1">
-                  View project →
-                </span>
-              </article>
-            ))}
-          </section>
         </div>
+
+        {/* my story: after the doors, like in the menu */}
+        <Story />
       </div>
     </main>
   );
