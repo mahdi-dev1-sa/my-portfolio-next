@@ -191,12 +191,13 @@ function drawCard(card: Card, now: number) {
   g.clip();
 
   const body = g.createLinearGradient(0, 0, W, H);
+  // the glass fades from the site colour into its deeper partner colour (both follow the random accent)
   if (light) {
     body.addColorStop(0, "rgba(255,255,255,0.78)");
-    body.addColorStop(1, "rgba(214,206,255,0.62)");
+    body.addColorStop(1, rgba(primary, 0.3));
   } else {
-    body.addColorStop(0, "rgba(150,165,255,0.34)");
-    body.addColorStop(1, "rgba(50,38,110,0.34)");
+    body.addColorStop(0, rgba(accent, 0.3));
+    body.addColorStop(1, rgba(primary, 0.4));
   }
   g.fillStyle = body;
   g.fillRect(0, 0, W, H);
@@ -277,7 +278,7 @@ function drawCard(card: Card, now: number) {
   g.fillStyle = rgba(fg, light ? 0.75 : 0.8);
   g.textAlign = "center";
   g.font = `500 27px ${MONO}`;
-  g.fillText(s.text.toUpperCase(), W / 2, H - 52, W - 112);
+  g.fillText(s.tagline.toUpperCase(), W / 2, H - 52, W - 112);
 
   const fs = 74;
   g.font = `600 ${fs}px ${MONO}`;
