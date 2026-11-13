@@ -9,8 +9,8 @@ import "../doors.css";
 //   2. that door opens (the doors section opens it when the hash changes)
 //   3. we walk in: the camera dives into the door (the doors section does it when the door is clicked)
 //   4. it gets dark and the specialization's page opens
-const RUSH_MS = 750; // the fast scroll down to the doors
-const OPEN_MS = 1000; // the door swings open before we walk in
+const RUSH_MS = 1500; // the scroll down to the doors (a higher number = slower)
+const OPEN_MS = 1500; // the door swings open before we walk in (a higher number = slower)
 
 const ease = (t: number) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
 
@@ -50,7 +50,7 @@ export default function DoorRush() {
         timers.push(window.setTimeout(() => door.click(), OPEN_MS));
       };
 
-      // the fast scroll: the door ends up a little below the middle of the screen
+      // the scroll: the door ends up a little below the middle of the screen
       const from = window.scrollY;
       const r = door.getBoundingClientRect();
       const to = Math.max(0, from + r.top + r.height / 2 - window.innerHeight * 0.55);
