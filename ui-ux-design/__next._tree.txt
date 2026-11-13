@@ -1,6 +1,6 @@
-:HL["/my-portfolio-next/_next/static/chunks/3h_s-obj56mn9.css","style"]
+:HL["/my-portfolio-next/_next/static/chunks/1g_h2ei3tdob2.css","style"]
 :HL["/my-portfolio-next/_next/static/media/953470e17626ea64-s.p.43p9crwv-vof6.woff2","font",{"crossOrigin":"","type":"font/woff2"}]
 :HL["/my-portfolio-next/_next/static/chunks/0ahw_34g5_wxz.css","style"]
 2:[["children",{"s":"__PAGE__","h":160}]]
 1:[["children",{"s":{"n":"service","t":"d","k":"ui-ux-design","s":["components"]},"h":65632,"c":"$Q2"}]]
-0:{"b":"WXxfwGixNuNA8o9inCpfc","t":{"t":{"s":"","h":131152,"c":"$Q1"}}}
+0:{"b":"qfcJ32sYMF0RQFd0OiOyZ","t":{"t":{"s":"","h":131152,"c":"$Q1"}}}
