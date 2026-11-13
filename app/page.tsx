@@ -4,6 +4,7 @@ import Hero from "./components/Hero";
 import ServiceCards from "./components/ServiceCards";
 import Story from "./components/Story";
 import Contact from "./components/Contact";
+import SocialCards from "./components/SocialCards";
 import DoorRush from "./components/DoorRush";
 
 // three.js is big, so load it in the browser only (never on the server)
@@ -30,6 +31,9 @@ export default function Home() {
 
         {/* contact: form + WhatsApp + email */}
         <Contact />
+
+        {/* the last thing on the page: two playing cards, TikTok and Instagram */}
+        <SocialCards />
       </div>
     </main>
   );
