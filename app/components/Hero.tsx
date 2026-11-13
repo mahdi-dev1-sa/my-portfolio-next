@@ -11,6 +11,9 @@ const GlassCarousel = dynamic(() => import("./GlassCarousel"), { ssr: false });
 // brush-script font for the name
 const brush = Kaushan_Script({ weight: "400", subsets: ["latin"], display: "swap" });
 
+// scroll to a section of the home page (smooth scrolling is set in the CSS)
+const goTo = (id: string) => document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
+
 // The first thing a visitor sees: my name, then a ribbon of glass cards (my specializations) that spirals around them.
 // The tall box lets the page scroll while the stage stays pinned; scrolling moves the carousel.
 export default function Hero() {
@@ -58,10 +61,18 @@ export default function Hero() {
           style={{ opacity: "var(--intro, 1)" }}
           className="absolute inset-x-0 bottom-6 z-30 flex justify-center gap-3 px-6 sm:gap-4 [[data-intro='0']_&]:pointer-events-none"
         >
-          <button className="glow-accent rounded-full bg-accent px-5 py-2.5 text-sm font-semibold text-accent-ink transition hover:brightness-110 sm:px-6 sm:py-3 sm:text-base">
+          <button
+            type="button"
+            onClick={() => goTo("contact")}
+            className="glow-accent rounded-full bg-accent px-5 py-2.5 text-sm font-semibold text-accent-ink transition hover:brightness-110 sm:px-6 sm:py-3 sm:text-base"
+          >
             Start a project
           </button>
-          <button className="rounded-full border border-primary/50 px-5 py-2.5 text-sm text-foreground transition hover:border-accent hover:text-accent-fg sm:px-6 sm:py-3 sm:text-base">
+          <button
+            type="button"
+            onClick={() => goTo("specializations")}
+            className="rounded-full border border-primary/50 px-5 py-2.5 text-sm text-foreground transition hover:border-accent hover:text-accent-fg sm:px-6 sm:py-3 sm:text-base"
+          >
             See my work
           </button>
         </div>
