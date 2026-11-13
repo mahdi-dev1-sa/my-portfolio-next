@@ -36,6 +36,12 @@
 :root[data-theme="light"][data-accent="magenta"] { --accent-fg: #be185d; }
 :root[data-theme="light"][data-accent="orange"]  { --accent-fg: #c2410c; }
 
+/* The gradient partner follows the accent too, so every glow and gradient (hero glow, glass cards, particles) matches the site colour */
+:root[data-accent="lime"]    { --primary: #2f9e44; }
+:root[data-accent="cyan"]    { --primary: #2563eb; }
+:root[data-accent="magenta"] { --primary: #9333ea; }
+:root[data-accent="orange"]  { --primary: #dc2626; }
+
 /* Custom breakpoint: the nav switches from a menu button to inline links at 1088px (all links fit in one row) */
 @theme {
   --breakpoint-nav: 68rem;
