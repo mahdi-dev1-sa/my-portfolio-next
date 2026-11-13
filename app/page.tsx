@@ -3,6 +3,7 @@ import dynamic from "next/dynamic";
 import Hero from "./components/Hero";
 import ServiceCards from "./components/ServiceCards";
 import Story from "./components/Story";
+import Contact from "./components/Contact";
 import DoorRush from "./components/DoorRush";
 
 // three.js is big, so load it in the browser only (never on the server)
@@ -26,6 +27,9 @@ export default function Home() {
 
         {/* my story: after the doors, like in the menu */}
         <Story />
+
+        {/* contact: form + WhatsApp + email */}
+        <Contact />
       </div>
     </main>
   );
