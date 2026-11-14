@@ -27,12 +27,12 @@ export default function Nav() {
   const path = usePathname();
   const ref = useRef<HTMLElement>(null);
 
-  // On the home page, a specialization does not open its page straight away: the page rushes down to the doors,
-  // that door opens and we walk in (see DoorRush). Ctrl/Cmd/Shift clicks, and every other page, just navigate.
+  // A specialization does not open its page straight away. On the home page the page rushes down to the doors,
+  // that door opens and we walk in (see DoorRush). On a specialization's page we first walk back out of the
+  // current door, then do the same (see DoorExit). Ctrl/Cmd/Shift clicks just navigate.
   const goThroughDoor = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
     setMenuOpen(false);
     if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
-    if (path !== "/") return;
     if (requestDoor(href.replace(/\//g, ""))) e.preventDefault();
   };
 
