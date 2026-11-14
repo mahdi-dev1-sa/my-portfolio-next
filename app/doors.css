@@ -21,3 +21,25 @@ html.door-rush main {
   filter: blur(3px);
   transition: filter 200ms ease-out;
 }
+
+/* Walking back OUT of a door (to open another specialization): the page shrinks away, blurred and dark,
+   like the camera stepping backwards out of the doorway */
+html.door-exit main {
+  transform: scale(0.78);
+  filter: blur(10px);
+  opacity: 0;
+  transition: transform 700ms cubic-bezier(.5,0,.8,.4), filter 700ms ease-in, opacity 600ms ease-in 100ms;
+}
+/* ... and on the home page the camera pulls back from that, so the doors come into view */
+@keyframes door-pull {
+  from { transform: scale(1.18); filter: blur(10px); opacity: 0; }
+  to { transform: scale(1); filter: blur(0); opacity: 1; }
+}
+html.door-arrive main {
+  animation: door-pull 900ms cubic-bezier(.2,.8,.2,1) backwards;
+}
+
+/* while a door scene plays, the doors ignore the mouse (the pointer can be over another door) */
+html.door-lock main {
+  pointer-events: none;
+}
