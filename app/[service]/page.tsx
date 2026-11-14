@@ -5,6 +5,7 @@ import { SERVICES } from "../services";
 import "../doors.css";
 import Nav from "../components/Nav";
 import LocalTime from "../components/LocalTime";
+import DoorExit from "../components/DoorExit";
 
 // One page per specialization (/web-development/, /app-development/ ...), all built from this one template.
 // Only these pages exist; anything else is a 404.
@@ -41,6 +42,9 @@ export default async function ServicePage({ params }: { params: Promise<{ servic
         className="pointer-events-none fixed inset-0 z-[150] bg-background"
         style={{ animation: "door-open 700ms ease-out forwards" }}
       />
+
+      {/* clicking another specialization in the nav: walk back out of this door first */}
+      <DoorExit id={s.id} />
 
       {/* top bar, same as the home page */}
       <div className="relative z-30 px-6 pt-7">
