@@ -1,7 +1,7 @@
 "use client";
 import { useEffect } from "react";
 import { SERVICES } from "../services";
-import { DOOR_EVENT, type DoorRequest } from "./DoorTransition";
+import { DOOR_EVENT, clearQueuedDoor, queuedDoor, type DoorRequest } from "./DoorTransition";
 import "../doors.css";
 
 // Clicking a specialization in the nav (on the home page) plays this, like the reference site:
@@ -11,6 +11,7 @@ import "../doors.css";
 //   4. it gets dark and the specialization's page opens
 const RUSH_MS = 1500; // the scroll down to the doors (a higher number = slower)
 const OPEN_MS = 1500; // the door swings open before we walk in (a higher number = slower)
+const ARRIVE_MS = 900; // coming back from another specialization: the camera pulls back to the doors
 
 const ease = (t: number) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
 
@@ -21,19 +22,59 @@ export default function DoorRush() {
     let frame = 0;
     const timers: number[] = [];
 
+    // the door button of a specialization (its label starts with the title)
+    const findDoor = (title: string) =>
+      Array.from(document.querySelectorAll<HTMLButtonElement>("button[aria-label]")).find((b) =>
+        b.getAttribute("aria-label")?.startsWith(`${title}:`)
+      );
+
+    // the door ends up a little below the middle of the screen
+    const doorScrollTop = (door: HTMLElement) =>
+      Math.max(0, window.scrollY + door.getBoundingClientRect().top + door.offsetHeight / 2 - window.innerHeight * 0.55);
+
+    // we came from another specialization's page (DoorExit): the doors are already in view,
+    // the camera pulls back from the old door, then the new door opens and we walk in
+    const queued = queuedDoor();
+    const queuedService = queued ? SERVICES.find((s) => s.id === queued) : undefined;
+    const queuedDoorEl = queuedService ? findDoor(queuedService.title) : undefined;
+    if (queuedService && queuedDoorEl) {
+      busy = true;
+      // the mouse may be over some other door while the page moves: it must not pick that one
+      html.classList.add("door-lock");
+      if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+        clearQueuedDoor();
+        queuedDoorEl.click();
+      } else {
+        // wait two frames: the router scrolls to the top after a page change, we scroll after it
+        frame = requestAnimationFrame(() => {
+          frame = requestAnimationFrame(() => {
+            window.scrollTo({ top: doorScrollTop(queuedDoorEl), behavior: "instant" as ScrollBehavior });
+            html.classList.add("door-arrive");
+            timers.push(
+              window.setTimeout(() => {
+                clearQueuedDoor();
+                html.classList.remove("door-arrive");
+                window.history.replaceState(null, "", `#${queuedService.id}`);
+                window.dispatchEvent(new Event("hashchange"));
+                timers.push(window.setTimeout(() => queuedDoorEl.click(), OPEN_MS));
+              }, ARRIVE_MS)
+            );
+          });
+        });
+      }
+    }
+
     const onEnter = (ev: Event) => {
       const req = (ev as CustomEvent<DoorRequest>).detail;
       const service = SERVICES.find((s) => s.id === req.id);
       if (!service) return;
 
-      // the door button of that specialization (its label starts with the title)
-      const door = Array.from(document.querySelectorAll<HTMLButtonElement>("button[aria-label]")).find((b) =>
-        b.getAttribute("aria-label")?.startsWith(`${service.title}:`)
-      );
+      const door = findDoor(service.title);
       if (!door) return; // no doors on this page: let the nav open the page itself
       req.handled = true;
       if (busy) return;
       busy = true;
+      html.classList.add("door-lock"); // the mouse must not pick another door while the page moves
 
       // reduce motion: no rush, the doors section opens the page straight away
       if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
@@ -52,8 +93,7 @@ export default function DoorRush() {
 
       // the scroll: the door ends up a little below the middle of the screen
       const from = window.scrollY;
-      const r = door.getBoundingClientRect();
-      const to = Math.max(0, from + r.top + r.height / 2 - window.innerHeight * 0.55);
+      const to = doorScrollTop(door);
       const start = performance.now();
       html.classList.add("door-rush");
       const step = (now: number) => {
@@ -72,6 +112,8 @@ export default function DoorRush() {
       cancelAnimationFrame(frame);
       timers.forEach((t) => window.clearTimeout(t));
       html.classList.remove("door-rush");
+      html.classList.remove("door-arrive");
+      html.classList.remove("door-lock");
     };
   }, []);
 
